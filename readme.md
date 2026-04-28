@@ -1,5 +1,9 @@
 <h1 align = "center">🏆T-Deck-Pro MAX 🏆</h1>
 
+|  [中文](./readme_cn.md) |  [English](./readme.md) |
+| --- | --- |
+
+
 <p> 
 <!-- <img src="https://img.shields.io/badge/ESP—IDF-5.1.1-ff3034" height="20px"></a> -->
 <img src="https://img.shields.io/badge/PlatformIO-6.5.0-ff7f00" height="20px"></a>
@@ -58,27 +62,11 @@ How to download the firmware? - [click me](./firmware/)
 |   IO Expansion   |         XL9555 (0x20)          |
 |      Motor       |         DRV2605 (0x5A)         |
 
-A7682E https://en.simcom.com/product/A7682E.html
-
 ## :two: Module 🎁
 
-Datasheets on the chip are available in [./hardware](./hardware/) directory.
-~~~
-zinggjm/GxEPD2@1.5.5
-jgromes/RadioLib@6.4.2
-lewisxhe/SensorLib@^0.2.0
-mikalhart/TinyGPSPlus @ ^1.0.3
-vshymanskyy/TinyGSM@^0.12.0
-lvgl/lvgl @ ~8.3.9
-lewisxhe/XPowersLib @ ^0.2.4
-adafruit/Adafruit TCA8418 @ ^1.0.1
-adafruit/Adafruit BusIO @ ^1.14.4
-olikraus/U8g2_for_Adafruit_GFX@^1.8.0
-adafruit/Adafruit GFX Library@^1.11.10
-esphome/ESP32-audioI2S#v3.0.12
-~~~
-
 ### 1. A7682E
+
+A7682E https://en.simcom.com/product/A7682E.html
 
 A7682E is the LTE Cat 1 module that supports wirelesscommunication modes of LTE-FDD/GSM/GPRS/EDGE.   It supports maximum 10Mbps downlink rate and 5Mbps uplink rate. A7682E supports multiple built-in network protocols.
 
@@ -111,15 +99,54 @@ The sound is too weak. Set `IO06` of the `XL9555` to `HIGH` to enable the power 
 
 ### 3. LoRa
 
-
-
 ❗ Note:
 | When using an external antenna, LoRa operates as shown in the following diagram;<br><br>It is necessary to set `IO04` of `XL9555` to `HIGH`. <br><br>When `IO04` of `XL9555` is at `LOW` level, the internal antenna (the default mode) is used. |
 | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ![alt text](./docs/README_img/image-1.png) |
 
 
-## :three: Quick Start 🎁
+## :three: Examples 🎁
+
+The following lists all examples to help you quickly get started with each module:
+
+| Example | Path | Description |
+| :--- | :--- | :--- |
+| **WireScan** | `examples/WireScan/` | I2C device scanner, open serial monitor after flashing to verify modules |
+| **test_wifi** | `examples/test_wifi/` | WiFi connection test |
+| **test_BHI260AP** | `examples/test_BHI260AP/` | Gyroscope (BHI260AP) test |
+| **test_GPS** | `examples/test_GPS/` | GPS (MIA-M10Q) module test |
+| **keypad** | `examples/keypad/` | Keyboard input test |
+| **XL9555/read** | `examples/XL9555/read/` | IO expansion chip read example |
+| **XL9555/write** | `examples/XL9555/write/` | IO expansion chip write example |
+| **Elink_paper/touch** | `examples/Elink_paper/touch/` | Touch screen basic test |
+| **Elink_paper/display** | `examples/Elink_paper/display/` | E-paper screen display example |
+| **Elink_paper/test_lvgl** | `examples/Elink_paper/test_lvgl/` | LVGL graphics library example |
+| **Elink_paper/GDEQ031T10_Arduino** | `examples/Elink_paper/GDEQ031T10_Arduino/` | E-paper Arduino library driver example |
+| **LoRa_sx1262/lora_send** | `examples/LoRa_sx1262/lora_send/` | LoRa send example |
+| **LoRa_sx1262/lora_recv** | `examples/LoRa_sx1262/lora_recv/` | LoRa receive example |
+| **A7682E/test_AT** | `examples/A7682E/test_AT/` | 4G module AT command test |
+| **ES8311/playWAV** | `examples/ES8311/playWAV/` | WAV audio playback example |
+| **ES8311/playFormSD** | `examples/ES8311/playFormSD/` | Audio playback from TF card example |
+| **battery/bq25896** | `examples/battery/bq25896/` | Battery management IC BQ25896 test |
+| **battery/bq27220** | `examples/battery/bq27220/` | Battery fuel gauge BQ27220 test |
+| **battery/sy6974** | `examples/battery/sy6974/` | Battery charging IC SY6974 test |
+| **motor/basic** | `examples/motor/basic/` | Vibration motor basic example |
+| **motor/audio** | `examples/motor/audio/` | Vibration motor audio feedback example |
+| **motor/realtime** | `examples/motor/realtime/` | Vibration motor real-time control example |
+| **motor/complex** | `examples/motor/complex/` | Vibration motor complex pattern example |
+| **tf_card** | `examples/tf_card/` | TF card read/write test |
+| **eng_test** | `examples/eng_test/` | Full system functionality test |
+
+### Quick Start Guide
+
+1. **First use**: Flash `WireScan` firmware first, verify I2C communication is normal
+2. **Display related**: Start with `Elink_paper/touch` or `Elink_paper/display`
+3. **Wireless communication**: WiFi test uses `test_wifi`, LoRa uses `lora_send`/`lora_recv`
+4. **4G communication**: Use `A7682E/test_AT` to test AT commands
+5. **Audio functions**: Try `ES8311/playWAV` first to play WAV files
+6. **Battery related**: Use `battery/bq25896` to check battery status
+
+## :four: Quick Start 🎁
 
 🟢 PlatformIO is recommended because these examples were developed on it. 🟢 
 
@@ -163,7 +190,7 @@ The sound is too weak. Set `IO06` of the `XL9555` to `HIGH` to enable the power 
 | Upload Speed                         | 921600                             |
 | USB Mode                             | **CDC and JTAG**                   |
 
-## :four: Pins 🎁
+## :five: Pins 🎁
 
 ~~~c
 #pragma once
@@ -300,17 +327,17 @@ The sound is too weak. Set `IO06` of the `XL9555` to `HIGH` to enable the power 
 #define BOARD_BOOT_PIN  0
 ~~~
 
-## :five: Test 🎁
+## :six: Test 🎁
 
 Sleep power consumption.
 
 ![alt text](./docs/README_img/image-2.png)
 
-## :six: FAQ 🎁
+## :seven: FAQ 🎁
 
 
 
-## :seven: Schematic & 3D 🎁
+## :eight: Schematic & 3D 🎁
 
 For more information, see the `./hardware` directory.
 

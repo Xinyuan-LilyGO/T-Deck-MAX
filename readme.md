@@ -1,4 +1,4 @@
-<h1 align = "center">🏆T-Deck-Pro MAX 🏆</h1>
+<h1 align = "center">🏆T-Deck-MAX 🏆</h1>
 
 |  [中文](./readme_cn.md) |  [English](./readme.md) |
 | --- | --- |

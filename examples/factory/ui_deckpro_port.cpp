@@ -240,7 +240,7 @@ void ui_wifi_get_scan_info(ui_wifi_scan_info_t *list, int list_len)
     int n = WiFi.scanNetworks();
     if(n > list_len)
         n = list_len;
-    
+
     memset(list, 0, (sizeof(*list) * list_len));
     for(int i = 0; i < n; i++)
     {
@@ -250,6 +250,25 @@ void ui_wifi_get_scan_info(ui_wifi_scan_info_t *list, int list_len)
         strncpy(list[i].name, WiFi.SSID(i).c_str(), 16);
         list[i].rssi = WiFi.RSSI(i);
     }
+}
+
+bool ui_wifi_connect(const char *ssid, const char *password)
+{
+    if (ssid == NULL || password == NULL) {
+        return false;
+    }
+    WiFi.begin(ssid, password);
+    return true;
+}
+
+wl_status_t ui_wifi_get_status(void)
+{
+    return WiFi.status();
+}
+
+void ui_wifi_disconnect(void)
+{
+    WiFi.disconnect();
 }
 //************************************[ screen 5 ]****************************************** Test
 bool ui_test_get(int peri_id)

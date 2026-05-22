@@ -12,3 +12,4 @@ firmware/\[H693\] T-Deck-Pro test/
 docs/image_source/img_start - 副本.xcf
 examples/test_factory/
 other/
+.cache/

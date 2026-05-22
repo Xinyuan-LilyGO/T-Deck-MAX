@@ -4,6 +4,7 @@
 #include "stdio.h"
 #include "ui_deckpro_port.h"
 #include "Arduino.h"
+#include "WiFi.h"
 #include <ctype.h>
 
 #define SETTING_PAGE_MAX_ITEM 7
@@ -37,6 +38,8 @@
 
 #define GLOBAL_BUF_LEN 30
 static char global_buf[GLOBAL_BUF_LEN];
+
+static char phone_keypad_to_digit(char key);
 
 static lv_timer_t *touch_chk_timer = NULL;
 static lv_timer_t *taskbar_update_timer = NULL;
@@ -1371,6 +1374,14 @@ static lv_obj_t *wifi_scan_lab;
 static lv_timer_t *wifi_scan_timer = NULL;
 
 static ui_wifi_scan_info_t wifi_info_list[UI_WIFI_SCAN_ITEM_MAX];
+static lv_obj_t *wifi_list = NULL;
+static char wifi_selected_ssid[32];
+static char wifi_password_input_buf[64];
+static lv_obj_t *wifi_password_ta = NULL;
+static lv_timer_t *wifi_connect_timer = NULL;
+static lv_obj_t *wifi_connect_status_lab = NULL;
+static bool wifi_connect_in_progress = false;
+static lv_timer_t *wifi_keypad_timer = NULL;
 
 static void scr4_2_btn_event_cb(lv_event_t * e)
 {
@@ -1379,41 +1390,55 @@ static void scr4_2_btn_event_cb(lv_event_t * e)
     }
 }
 
+static void wifi_list_event(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code != LV_EVENT_CLICKED) return;
+
+    lv_obj_t *obj = lv_event_get_target(e);
+    int idx = (int)(uintptr_t)lv_obj_get_user_data(obj);
+    if (idx < 0 || idx >= UI_WIFI_SCAN_ITEM_MAX) return;
+    if (strcmp(wifi_info_list[idx].name, "") == 0) return;
+
+    memset(wifi_selected_ssid, 0, sizeof(wifi_selected_ssid));
+    strncpy(wifi_selected_ssid, wifi_info_list[idx].name, sizeof(wifi_selected_ssid) - 1);
+
+    scr_mgr_push(SCREEN4_3_ID, false);
+}
+
 static void show_wifi_scan(void)
 {
-#define BUFF_LEN 400
-    char buf[BUFF_LEN];
-    int ret = 0, offs = 0;
-
-    ret = lv_snprintf(buf + offs, BUFF_LEN, "       NAME      | RSSI\n");
-    offs = offs + ret;
-    ret = lv_snprintf(buf + offs, BUFF_LEN, "-----------------------\n");
-    offs = offs + ret;
-
-    for(int i = 0; i < UI_WIFI_SCAN_ITEM_MAX; i++) {
-        if(strcmp(wifi_info_list[i].name, "") == 0 && wifi_info_list[i].rssi == 0)
-        {
-            break;
-        }
-        if(i == UI_WIFI_SCAN_ITEM_MAX - 1) {
-            ret = lv_snprintf(buf + offs, BUFF_LEN, "%-16.16s | %4d", wifi_info_list[i].name, wifi_info_list[i].rssi);
-            break;
-        }
-
-        ret = lv_snprintf(buf + offs, BUFF_LEN, "%-16.16s | %4d\n", wifi_info_list[i].name, wifi_info_list[i].rssi);
-        offs = offs + ret;
+    if (wifi_list) {
+        lv_obj_del(wifi_list);
+        wifi_list = NULL;
     }
-    lv_label_set_text(wifi_scan_lab, buf);
-#undef BUFF_LEN
+
+    wifi_list = lv_list_create(scr4_2_cont);
+    lv_obj_set_size(wifi_list, lv_pct(95), lv_pct(70));
+    lv_obj_set_style_pad_top(wifi_list, 5, LV_PART_MAIN);
+    lv_obj_set_style_pad_row(wifi_list, 5, LV_PART_MAIN);
+    lv_obj_set_style_radius(wifi_list, 0, LV_PART_MAIN);
+    lv_obj_set_style_border_width(wifi_list, 0, LV_PART_MAIN);
+    lv_obj_set_style_shadow_width(wifi_list, 0, LV_PART_MAIN);
+
+    for (int i = 0; i < UI_WIFI_SCAN_ITEM_MAX; i++) {
+        if (strcmp(wifi_info_list[i].name, "") == 0 && wifi_info_list[i].rssi == 0) {
+            break;
+        }
+
+        char item_text[24];
+        lv_snprintf(item_text, sizeof(item_text), "%-16.16s %4d",
+                    wifi_info_list[i].name, wifi_info_list[i].rssi);
+
+        lv_obj_t *btn = lv_list_add_btn(wifi_list, NULL, item_text);
+        lv_obj_set_height(btn, 28);
+        lv_obj_set_style_text_font(btn, FONT_BOLD_MONO_SIZE_14, LV_PART_MAIN);
+        lv_obj_set_user_data(btn, (void *)(uintptr_t)i);
+        lv_obj_add_event_cb(btn, wifi_list_event, LV_EVENT_CLICKED, NULL);
+    }
 }
 
-static void wifi_scan_timer_event(lv_timer_t *t)
-{
-    ui_wifi_get_scan_info(wifi_info_list, UI_WIFI_SCAN_ITEM_MAX);
-    show_wifi_scan();
-}
-
-static void create4_2(lv_obj_t *parent) 
+static void create4_2(lv_obj_t *parent)
 {
     scr4_2_cont = lv_obj_create(parent);
     lv_obj_set_size(scr4_2_cont, lv_pct(100), lv_pct(90));
@@ -1431,23 +1456,36 @@ static void create4_2(lv_obj_t *parent)
     wifi_scan_lab = lv_label_create(scr4_2_cont);
     lv_obj_set_width(wifi_scan_lab, lv_pct(95));
     lv_obj_set_style_pad_all(wifi_scan_lab, 0, LV_PART_MAIN);
-    lv_obj_set_style_text_font(wifi_scan_lab, FONT_BOLD_MONO_SIZE_15, LV_PART_MAIN);   
+    lv_obj_set_style_text_font(wifi_scan_lab, FONT_BOLD_MONO_SIZE_15, LV_PART_MAIN);
     lv_obj_set_style_border_width(wifi_scan_lab, 0, LV_PART_MAIN);
     lv_label_set_long_mode(wifi_scan_lab, LV_LABEL_LONG_WRAP);
+    lv_label_set_text(wifi_scan_lab, "Press Scan to search WiFi");
+
+    lv_obj_t *scan_btn = lv_btn_create(scr4_2_cont);
+    lv_obj_set_height(scan_btn, 36);
+    lv_obj_set_style_bg_color(scan_btn, DECKPRO_COLOR_FG, LV_PART_MAIN);
+    lv_obj_set_style_text_color(scan_btn, DECKPRO_COLOR_BG, LV_PART_MAIN);
+    lv_obj_t *scan_btn_lab = lv_label_create(scan_btn);
+    lv_label_set_text(scan_btn_lab, "Scan");
+    lv_obj_center(scan_btn_lab);
+    lv_obj_add_event_cb(scan_btn, [](lv_event_t *e) {
+        if (e->code == LV_EVENT_CLICKED) {
+            ui_wifi_get_scan_info(wifi_info_list, UI_WIFI_SCAN_ITEM_MAX);
+            show_wifi_scan();
+        }
+    }, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t *back4_label = scr_back_btn_create(parent, ("Wifi"), scr4_2_btn_event_cb);
 }
-static void entry4_2(void) 
+static void entry4_2(void)
 {
     ui_disp_full_refr();
-    wifi_scan_timer = lv_timer_create(wifi_scan_timer_event, 10000, NULL);
-    lv_timer_ready(wifi_scan_timer);
 }
 static void exit4_2(void) {
     ui_disp_full_refr();
-    if(wifi_scan_timer) {
-        lv_timer_del(wifi_scan_timer);
-        wifi_scan_timer = NULL;
+    if (wifi_list) {
+        lv_obj_del(wifi_list);
+        wifi_list = NULL;
     }
 }
 
@@ -1458,6 +1496,186 @@ static scr_lifecycle_t screen4_2 = {
     .entry = entry4_2,
     .exit  = exit4_2,
     .destroy = destroy4_2,
+};
+#endif
+
+// --------------------- screen 4.3 --------------------- WiFi Password Input
+#if 1
+static void wifi_password_back_event_cb(lv_event_t *e)
+{
+    if (e->code == LV_EVENT_CLICKED) {
+        if (wifi_keypad_timer) {
+            lv_timer_del(wifi_keypad_timer);
+            wifi_keypad_timer = NULL;
+        }
+        if (wifi_connect_timer) {
+            lv_timer_del(wifi_connect_timer);
+            wifi_connect_timer = NULL;
+        }
+        wifi_connect_in_progress = false;
+        memset(wifi_selected_ssid, 0, sizeof(wifi_selected_ssid));
+        memset(wifi_password_input_buf, 0, sizeof(wifi_password_input_buf));
+        scr_mgr_pop(false);
+    }
+}
+
+static void wifi_password_connect_event_cb(lv_event_t *e)
+{
+    if (e->code == LV_EVENT_CLICKED) {
+        if (wifi_connect_in_progress) return;
+
+        const char *password = lv_textarea_get_text(wifi_password_ta);
+        if (password == NULL || strlen(password) == 0) {
+            lv_label_set_text(wifi_connect_status_lab, "Password cannot be empty");
+            return;
+        }
+
+        ui_wifi_connect(wifi_selected_ssid, password);
+        wifi_connect_in_progress = true;
+        lv_label_set_text(wifi_connect_status_lab, "Connecting...");
+    }
+}
+
+static void wifi_connect_timer_cb(lv_timer_t *t)
+{
+    (void)t;
+    wl_status_t status = ui_wifi_get_status();
+
+    if (status == WL_CONNECTED) {
+        lv_timer_del(wifi_connect_timer);
+        wifi_connect_timer = NULL;
+        wifi_connect_in_progress = false;
+        lv_label_set_text(wifi_connect_status_lab, "Connected!");
+        lv_obj_set_style_text_color(wifi_connect_status_lab, lv_color_hex(0x008800), LV_PART_MAIN);
+    } else if (status == WL_CONNECT_FAILED || status == WL_NO_SSID_AVAIL ||
+               status == WL_IDLE_STATUS || status == WL_DISCONNECTED) {
+        lv_timer_del(wifi_connect_timer);
+        wifi_connect_timer = NULL;
+        wifi_connect_in_progress = false;
+        lv_label_set_text(wifi_connect_status_lab, "Connection failed");
+        lv_obj_set_style_text_color(wifi_connect_status_lab, lv_color_hex(0x880000), LV_PART_MAIN);
+    }
+}
+
+static void wifi_password_keypad_handler(void)
+{
+    if (wifi_password_ta == NULL) return;
+
+    char key = '\0';
+    if (!ui_input_get_keypay_val(&key)) {
+        return;
+    }
+    ui_input_set_keypay_flag();
+
+    if (key == KEYPAD_KEY_DEL) {
+        lv_textarea_del_char(wifi_password_ta);
+    } else if (key == KEYPAD_KEY_ENT) {
+        lv_event_t e_tmp;
+        e_tmp.code = LV_EVENT_CLICKED;
+        e_tmp.target = wifi_password_ta;
+        wifi_password_connect_event_cb(&e_tmp);
+    } else {
+        char mapped = phone_keypad_to_digit(key);
+        if (mapped != '\0') {
+            char txt[2] = {mapped, '\0'};
+            lv_textarea_add_text(wifi_password_ta, txt);
+        }
+    }
+}
+
+static void create4_3(lv_obj_t *parent)
+{
+    lv_obj_t *ssid_lab = lv_label_create(parent);
+    lv_obj_set_width(ssid_lab, lv_pct(95));
+    lv_obj_align(ssid_lab, LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_set_style_text_font(ssid_lab, FONT_BOLD_SIZE_16, LV_PART_MAIN);
+    lv_obj_set_style_text_align(ssid_lab, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+    char ssid_title[40];
+    lv_snprintf(ssid_title, sizeof(ssid_title), "SSID: %s", wifi_selected_ssid);
+    lv_label_set_text(ssid_lab, ssid_title);
+
+    wifi_password_ta = lv_textarea_create(parent);
+    lv_textarea_set_one_line(wifi_password_ta, true);
+    lv_obj_set_size(wifi_password_ta, 224, 38);
+    lv_obj_align(wifi_password_ta, LV_ALIGN_TOP_MID, 0, 44);
+    lv_obj_clear_flag(wifi_password_ta, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_text_font(wifi_password_ta, &Font_Mono_Bold_20, LV_PART_MAIN);
+    lv_obj_set_style_text_align(wifi_password_ta, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+    lv_obj_set_style_pad_top(wifi_password_ta, 7, LV_PART_MAIN);
+    lv_textarea_set_placeholder_text(wifi_password_ta, "Password");
+    lv_textarea_set_max_length(wifi_password_ta, 63);
+
+    wifi_connect_status_lab = lv_label_create(parent);
+    lv_obj_set_width(wifi_connect_status_lab, lv_pct(96));
+    lv_obj_align(wifi_connect_status_lab, LV_ALIGN_TOP_MID, 0, 88);
+    lv_obj_set_style_text_align(wifi_connect_status_lab, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+    lv_obj_set_style_text_font(wifi_connect_status_lab, FONT_BOLD_SIZE_14, LV_PART_MAIN);
+    lv_label_set_text(wifi_connect_status_lab, "");
+
+    lv_obj_t *connect_btn = lv_btn_create(parent);
+    lv_obj_set_size(connect_btn, 100, 36);
+    lv_obj_align(connect_btn, LV_ALIGN_TOP_LEFT, 20, 120);
+    lv_obj_set_style_bg_color(connect_btn, DECKPRO_COLOR_FG, LV_PART_MAIN);
+    lv_obj_set_style_text_color(connect_btn, DECKPRO_COLOR_BG, LV_PART_MAIN);
+    lv_obj_t *connect_lab = lv_label_create(connect_btn);
+    lv_label_set_text(connect_lab, "Connect");
+    lv_obj_center(connect_lab);
+    lv_obj_add_event_cb(connect_btn, wifi_password_connect_event_cb, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_t *back_btn = lv_btn_create(parent);
+    lv_obj_set_size(back_btn, 100, 36);
+    lv_obj_align(back_btn, LV_ALIGN_TOP_RIGHT, -20, 120);
+    lv_obj_set_style_bg_color(back_btn, DECKPRO_COLOR_FG, LV_PART_MAIN);
+    lv_obj_set_style_text_color(back_btn, DECKPRO_COLOR_BG, LV_PART_MAIN);
+    lv_obj_t *back_lab = lv_label_create(back_btn);
+    lv_label_set_text(back_lab, "Back");
+    lv_obj_center(back_lab);
+    lv_obj_add_event_cb(back_btn, wifi_password_back_event_cb, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_t *hint_lab = lv_label_create(parent);
+    lv_obj_align(hint_lab, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_set_style_text_font(hint_lab, FONT_BOLD_MONO_SIZE_14, LV_PART_MAIN);
+    lv_label_set_text(hint_lab, "ENT=Connect  DEL=Delete  Back=Cancel");
+}
+
+static void entry4_3(void)
+{
+    wifi_connect_in_progress = false;
+    wifi_keypad_timer = lv_timer_create([](lv_timer_t *t) {
+        (void)t;
+        wifi_password_keypad_handler();
+    }, 50, NULL);
+
+    wifi_connect_timer = lv_timer_create(wifi_connect_timer_cb, 500, NULL);
+
+    ui_disp_full_refr();
+}
+
+static void exit4_3(void)
+{
+    wifi_connect_in_progress = false;
+    if (wifi_keypad_timer) {
+        lv_timer_del(wifi_keypad_timer);
+        wifi_keypad_timer = NULL;
+    }
+    if (wifi_connect_timer) {
+        lv_timer_del(wifi_connect_timer);
+        wifi_connect_timer = NULL;
+    }
+    ui_disp_full_refr();
+}
+
+static void destroy4_3(void)
+{
+    wifi_password_ta = NULL;
+    wifi_connect_status_lab = NULL;
+}
+
+static scr_lifecycle_t screen4_3 = {
+    .create = create4_3,
+    .entry = entry4_3,
+    .exit  = exit4_3,
+    .destroy = destroy4_3,
 };
 #endif
 //************************************[ screen 5 ]****************************************** Test
@@ -3447,8 +3665,9 @@ void ui_deckpro_entry(void)
     scr_mgr_register(SCREEN4_ID,    &screen4);      // WIFI
     scr_mgr_register(SCREEN4_1_ID,  &screen4_1);    //  - WIFI Config
     scr_mgr_register(SCREEN4_2_ID,  &screen4_2);    //  - WIFI Scan
-    scr_mgr_register(SCREEN5_ID,    &screen5);      // 
-    scr_mgr_register(SCREEN6_ID,    &screen6);      // Battery
+    scr_mgr_register(SCREEN4_3_ID,  &screen4_3);    //  - WIFI Password Input
+    scr_mgr_register(SCREEN5_ID,    &screen5);      //
+    scr_mgr_register(SCREEN6_ID,    &screen6);      //
     scr_mgr_register(SCREEN6_1_ID,  &screen6_1);    //  - BQ25896
     scr_mgr_register(SCREEN6_2_ID,  &screen6_2);    //  - BQ27220
     scr_mgr_register(SCREEN7_ID,    &screen7);      // 

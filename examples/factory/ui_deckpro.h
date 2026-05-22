@@ -41,6 +41,7 @@ extern "C" {
 #define DECKPRO_COLOR_FG        lv_color_black()
 #define UI_SLIDING_DISTANCE     40
 #define UI_WIFI_SCAN_ITEM_MAX   13
+#define UI_WIFI_CONNECT_TIMEOUT_MS   30000
 
 /*********************************************************************************
  *                                  TYPEDEFS
@@ -56,6 +57,7 @@ enum {
     SCREEN4_ID,
     SCREEN4_1_ID,
     SCREEN4_2_ID,
+    SCREEN4_3_ID,
     SCREEN5_ID,
     SCREEN6_ID,
     SCREEN6_1_ID,

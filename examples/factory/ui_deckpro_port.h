@@ -12,6 +12,7 @@
  *                                  INCLUDES
  * *******************************************************************************/
 #include "lvgl.h"
+#include <WiFi.h>
 
 #include "phone_runtime.h"
 #include "peripheral.h"
@@ -117,6 +118,9 @@ void ui_gps_get_speed(double *speed);
 
 // [ screen 4 ] --- Wifi Scan
 void ui_wifi_get_scan_info(ui_wifi_scan_info_t *list, int list_len);
+bool ui_wifi_connect(const char *ssid, const char *password);
+wl_status_t ui_wifi_get_status(void);
+void ui_wifi_disconnect(void);
 
 // [ screen 5 ] --- State
 bool ui_test_get(int peri_id);

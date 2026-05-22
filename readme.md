@@ -45,7 +45,7 @@ How to download the firmware? - [click me](./firmware/)
 
 ## :one: Product 🎁
 
-|       H693       |      T-Deck-MAX            |
+|     Parameter    |      T-Deck-MAX            |
 | :--------------: | :----------------------------: |
 |       MCU        |            ESP32-S3            |
 |  Flash / PSRAM   |            16M / 8M            |
@@ -54,13 +54,29 @@ How to download the firmware? - [click me](./firmware/)
 |     Display      |      GDEQ031T10 (320x240)      |
 |    4G-Module     |             A7682E             |
 | Battery Capacity |          3.7V-1500mAh          |
-|   Battery Chip   | BQ25896 (0x6B), BQ27220 (0x55) |
+|   Battery Chip   | SY6970 (0x6A), BQ27220 (0x55) |
 |      Audio       |         ES8311 (0x18)          |
 |      Touch       |         CST328 (0x1A)          |
 |    Gyroscope     |        BHI260AP (0x28)         |
 |     Keyboard     |         TCA8418 (0x34)         |
 |   IO Expansion   |         XL9555 (0x20)          |
 |      Motor       |         DRV2605 (0x5A)         |
+
+## Flashing Firmware 🎁
+
+Before flashing firmware, connect the device to your computer, select the correct COM port, and put the board into download mode:
+
+1. Press and hold the `BOOT` button.
+2. Press and release the `RST` button on the back.
+3. Release the `BOOT` button.
+
+### 2.1. Use `LILYGO Spark` to Flash Firmware (Recommended)
+
+- Download the tool from [LILYGO Spark](https://lilygo.cc/en-us/pages/lilygo-spark?srsltid=AfmBOoorTB7ptFu2LQNLRnoI2SA0zBGJTN6JpI9J3hmHEkKhBQSmeu0Y).
+
+- Search for your device name and download the corresponding firmware.
+
+![alt text](./docs/README_img/lilygo_spark.png)
 
 ## :two: Module 🎁
 
@@ -195,24 +211,18 @@ The following lists all examples to help you quickly get started with each modul
 ~~~c
 #pragma once
 
-/**  I2C Address
- * 0x18 --- ES8311
- * 0x1A --- Touch
- * 0x20 --- XL9555
- * 0x28 --- Gyroscope
- * 0x34 --- Keyboard
- * 0x55 --- BQ27220
- * 0x5A --- Motor
- * 0x6B --- BQ25896
- */
-#define BOARD_I2C_ADDR_ES8311      0x18
-#define BOARD_I2C_ADDR_TOUCH       0x1A
-#define BOARD_I2C_ADDR_XL9555      0x20
-#define BOARD_I2C_ADDR_GYROSCOPDE  0x28
-#define BOARD_I2C_ADDR_KEYBOARD    0x34
-#define BOARD_I2C_ADDR_BQ27220     0x55
-#define BOARD_I2C_ADDR_MOTOR       0x5A
-#define BOARD_I2C_ADDR_BQ25896     0x6B
+// I2C Address
+// Note: `BQ25896` has been discontinued on later `T-Deck-MAX` revisions.
+// Newer boards use `SY6970` instead.
+#define BOARD_I2C_ADDR_ES8311      0x18     // ES8311   audio codec
+#define BOARD_I2C_ADDR_TOUCH       0x1A     // CST328   touch controller
+#define BOARD_I2C_ADDR_XL9555      0x20     // XL9555   IO expander
+#define BOARD_I2C_ADDR_GYROSCOPDE  0x28     // BHI260AP gyroscope
+#define BOARD_I2C_ADDR_KEYBOARD    0x34     // TCA8418  keyboard matrix controller
+#define BOARD_I2C_ADDR_BQ27220     0x55     // BQ27220  fuel gauge
+#define BOARD_I2C_ADDR_MOTOR       0x5A     // DRV2605  vibration motor driver
+#define BOARD_I2C_ADDR_BQ25896     0x6B     // BQ25896  charger (deprecated)
+#define BOARD_I2C_ADDR_SY6970      0x6A     // SY6970   charger
 
 // IIC
 #define BOARD_I2C_SDA  13
@@ -235,9 +245,9 @@ The following lists all examples to help you quickly get started with each modul
 // Connected to XL9555 IO06, enable power amplifier,
 // increase the volume of the speaker
 #define BOARD_XL9555_06_AMPLIFIER    (6)     // HIGH: Enable power amplifier
-#define BOARD_XL9555_07_TOUCH_RST   (7)     // LOW: Reset touch
-#define BOARD_XL9555_10_PWEKEY_EN   (8)     // HIGH: Enable A7682E POWERKEY
-#define BOARD_XL9555_11_KEY_RST     (9)     // LOW: Reset keyboard
+#define BOARD_XL9555_07_TOUCH_RST    (7)     // LOW: Reset touch
+#define BOARD_XL9555_10_PWRKEY_EN    (8)     // HIGH: Enable A7682E POWERKEY
+#define BOARD_XL9555_11_KEY_RST      (9)     // LOW: Reset keyboard
 /* Module A7682E and ES8311 share the output for headphones and speakers.
 /  Select the audio output through AUDIO_SEL. When AUDIO_SEL is
 /  HIGH : the headphones and speakers output the sound from A7682E.
@@ -321,7 +331,7 @@ The following lists all examples to help you quickly get started with each modul
 #define BOARD_A7682E_ITR    8
 #define BOARD_A7682E_RXD    10
 #define BOARD_A7682E_TXD    11
-#define BOARD_A7682E_PWRKEY BOARD_XL9555_10_PWEKEY_EN   // Connect the IO10 of the expansion chip XL9555
+#define BOARD_A7682E_PWRKEY BOARD_XL9555_10_PWRKEY_EN   // Connect the IO10 of the expansion chip XL9555
 
 // Boot pin
 #define BOARD_BOOT_PIN  0

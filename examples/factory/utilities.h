@@ -48,7 +48,7 @@
 // increase the volume of the speaker
 #define BOARD_XL9555_06_AMPLIFIER   (6)     // HIGH: Enable power amplifier
 #define BOARD_XL9555_07_TOUCH_RST   (7)     // LOW: Reset touch
-#define BOARD_XL9555_10_PWEKEY_EN   (8)     // HIGH: Enable A7682E POWERKEY
+#define BOARD_XL9555_10_PWRKEY_EN   (8)     // HIGH: Enable A7682E POWERKEY
 #define BOARD_XL9555_11_KEY_RST     (9)     // LOW: Reset keyboard
 /* Module A7682E and ES8311 share the output for headphones and speakers.
 /  Select the audio output through AUDIO_SEL. When AUDIO_SEL is
@@ -148,7 +148,7 @@
 #define BOARD_A7682E_ITR    8
 #define BOARD_A7682E_RXD    10
 #define BOARD_A7682E_TXD    11
-#define BOARD_A7682E_PWRKEY BOARD_XL9555_10_PWEKEY_EN   // Connect the IO10 of the expansion chip XL9555
+#define BOARD_A7682E_PWRKEY BOARD_XL9555_10_PWRKEY_EN   // Connect the IO10 of the expansion chip XL9555
 
 // Boot pin
 #define BOARD_BOOT_PIN  0

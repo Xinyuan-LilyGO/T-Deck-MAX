@@ -51,13 +51,29 @@
 |     显示屏       |      GDEQ031T10 (320x240)      |
 |    4G 模块      |             A7682E             |
 | 电池容量 |          3.7V-1500mAh          |
-|   电池芯片   | BQ25896 (0x6B), BQ27220 (0x55) |
+|   电池芯片   | SY6970 (0x6A), BQ27220 (0x55) |
 |      音频       |         ES8311 (0x18)          |
 |      触摸       |         CST328 (0x1A)          |
 |    陀螺仪     |        BHI260AP (0x28)         |
 |     键盘     |         TCA8418 (0x34)         |
 |   IO 扩展   |         XL9555 (0x20)          |
 |      马达       |         DRV2605 (0x5A)         |
+
+## 更新程序 🎁
+
+下载程序前，请先将设备连接到电脑，选择对应的 COM 端口，并让设备进入下载模式：
+
+1. 按住 BOOT 键不要松开；
+2. 点击背面的 RST 按键后松开；
+3. 最后松开 BOOT 键。
+
+### 2.1. 使用 `LILYGO Spark` 下载程序（推荐）
+
+- 从 [LILYGO Spark](https://lilygo.cc/en-us/pages/lilygo-spark?srsltid=AfmBOoorTB7ptFu2LQNLRnoI2SA0zBGJTN6JpI9J3hmHEkKhBQSmeu0Y) 下载软件。
+
+- 搜索你的设备名称，并下载对应程序。
+
+![alt text](./docs/README_img/lilygo_spark.png)
 
 ## :two: 模块说明 🎁
 
@@ -192,24 +208,17 @@ SSL
 ~~~c
 #pragma once
 
-/**  I2C 地址
- * 0x18 --- ES8311
- * 0x1A --- 触摸
- * 0x20 --- XL9555
- * 0x28 --- 陀螺仪
- * 0x34 --- 键盘
- * 0x55 --- BQ27220
- * 0x5A --- 马达
- * 0x6B --- BQ25896
- */
-#define BOARD_I2C_ADDR_ES8311      0x18
-#define BOARD_I2C_ADDR_TOUCH       0x1A
-#define BOARD_I2C_ADDR_XL9555      0x20
-#define BOARD_I2C_ADDR_GYROSCOPDE  0x28
-#define BOARD_I2C_ADDR_KEYBOARD    0x34
-#define BOARD_I2C_ADDR_BQ27220     0x55
-#define BOARD_I2C_ADDR_MOTOR       0x5A
-#define BOARD_I2C_ADDR_BQ25896     0x6B
+// I2C 地址
+// 说明：`BQ25896` 因为一些原因停用，后续的 `T-Deck-MAX` 都将使用 `SY6970`。
+#define BOARD_I2C_ADDR_ES8311      0x18     // ES8311   音频 codec
+#define BOARD_I2C_ADDR_TOUCH       0x1A     // CST328   触摸控制器
+#define BOARD_I2C_ADDR_XL9555      0x20     // XL9555   IO 扩展
+#define BOARD_I2C_ADDR_GYROSCOPDE  0x28     // BHI260AP 陀螺仪
+#define BOARD_I2C_ADDR_KEYBOARD    0x34     // TCA8418  键盘矩阵控制器
+#define BOARD_I2C_ADDR_BQ27220     0x55     // BQ27220  电量计
+#define BOARD_I2C_ADDR_MOTOR       0x5A     // DRV2605  振动马达驱动
+#define BOARD_I2C_ADDR_BQ25896     0x6B     // BQ25896  充电管理（已停用）
+#define BOARD_I2C_ADDR_SY6970      0x6A     // SY6970   充电管理
 
 // IIC
 #define BOARD_I2C_SDA  13
@@ -232,9 +241,9 @@ SSL
 // 连接到 XL9555 IO06，启用功率放大器，
 // 增加扬声器音量
 #define BOARD_XL9555_06_AMPLIFIER    (6)     // HIGH: 启用功率放大器
-#define BOARD_XL9555_07_TOUCH_RST   (7)     // LOW: 复位触摸
-#define BOARD_XL9555_10_PWEKEY_EN   (8)     // HIGH: 启用 A7682E POWERKEY
-#define BOARD_XL9555_11_KEY_RST     (9)     // LOW: 复位键盘
+#define BOARD_XL9555_07_TOUCH_RST    (7)     // LOW: 复位触摸
+#define BOARD_XL9555_10_PWRKEY_EN    (8)     // HIGH: 启用 A7682E POWERKEY
+#define BOARD_XL9555_11_KEY_RST      (9)     // LOW: 复位键盘
 /* A7682E 和 ES8311 模块共用耳机和扬声器输出
 /  通过 AUDIO_SEL 选择音频输出。当 AUDIO_SEL 为
 /  HIGH : 耳机和扬声器输出 A7682E 的声音
@@ -318,7 +327,7 @@ SSL
 #define BOARD_A7682E_ITR    8
 #define BOARD_A7682E_RXD    10
 #define BOARD_A7682E_TXD    11
-#define BOARD_A7682E_PWRKEY BOARD_XL9555_10_PWEKEY_EN   // 连接到 XL9555 扩展芯片的 IO10
+#define BOARD_A7682E_PWRKEY BOARD_XL9555_10_PWRKEY_EN   // 连接到 XL9555 扩展芯片的 IO10
 
 // Boot 引脚
 #define BOARD_BOOT_PIN  0

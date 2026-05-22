@@ -18,7 +18,7 @@
 #define BOARD_I2C_SCL 14
 
 #define BOARD_XL9555_00_6609_EN     (0)
-#define BOARD_XL9555_10_PWEKEY_EN   (8)
+#define BOARD_XL9555_10_PWRKEY_EN   (8)
 // Connected to XL9555 IO06, enable power amplifier,
 // increase the volume of the speaker
 #define BOARD_XL9555_06_AMPLIFIER (6) // Connected to XL9555 IO06
@@ -187,7 +187,7 @@ void setup()
     io.digitalWrite(BOARD_XL9555_06_AMPLIFIER, HIGH); // Enable power amplifier
     io.digitalWrite(BOARD_XL9555_12_AUDIO_SEL, LOW); // Audio output selection: A7682E module
     io.digitalWrite(BOARD_XL9555_00_6609_EN, HIGH);     // enable A7682 module power
-    io.digitalWrite(BOARD_XL9555_10_PWEKEY_EN, HIGH);   // power on
+    io.digitalWrite(BOARD_XL9555_10_PWRKEY_EN, HIGH);   // power on
 
     Wire.begin(BOARD_I2C_SDA, BOARD_I2C_SCL);
     codec.setPins(BOARD_ES8311_MCLK, BOARD_ES8311_SCLK, BOARD_ES8311_LRCK, BOARD_ES8311_ASDOUT, BOARD_ES8311_DSDIN);

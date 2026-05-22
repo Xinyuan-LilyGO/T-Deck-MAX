@@ -49,7 +49,7 @@ void ui_disp_partial_refr_for(uint32_t duration_ms);
 // BOARD_XL9555_02_GPS_EN    
 // BOARD_XL9555_03_1V8_EN    
 // BOARD_XL9555_05_MOTOR_EN  
-// BOARD_XL9555_10_PWEKEY_EN 
+// BOARD_XL9555_10_PWRKEY_EN 
 void ui_xl9555_power_on(int io);
 void ui_xl9555_power_off(int io);
 

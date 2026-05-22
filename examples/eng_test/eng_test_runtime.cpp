@@ -313,7 +313,7 @@ bool init_codec_if_needed()
     }
     route_audio_to_es8311(true);
     set_power_pin(BOARD_XL9555_00_6609_EN, true);
-    set_power_pin(BOARD_XL9555_10_PWEKEY_EN, true);
+    set_power_pin(BOARD_XL9555_10_PWRKEY_EN, true);
     codec.setPins(BOARD_ES8311_MCLK, BOARD_ES8311_SCLK, BOARD_ES8311_LRCK, BOARD_ES8311_ASDOUT, BOARD_ES8311_DSDIN);
     g_audio_ctx.initialized = codec.begin(Wire, BOARD_I2C_ADDR_ES8311, CODEC_TYPE_ES8311);
     if (g_audio_ctx.initialized) {
@@ -388,11 +388,11 @@ bool init_modem_if_needed()
     route_audio_to_modem(false);
     SerialAT.begin(115200, SERIAL_8N1, BOARD_A7682E_TXD, BOARD_A7682E_RXD);
 
-    set_power_pin(BOARD_XL9555_10_PWEKEY_EN, false);
+    set_power_pin(BOARD_XL9555_10_PWRKEY_EN, false);
     delay(10);
-    set_power_pin(BOARD_XL9555_10_PWEKEY_EN, true);
+    set_power_pin(BOARD_XL9555_10_PWRKEY_EN, true);
     delay(50);
-    set_power_pin(BOARD_XL9555_10_PWEKEY_EN, false);
+    set_power_pin(BOARD_XL9555_10_PWRKEY_EN, false);
     delay(20);
 
     for (int retry = 0; retry < 5; ++retry) {
@@ -502,7 +502,7 @@ static void power_down_before_sleep()
         BOARD_XL9555_03_1V8_EN,
         BOARD_XL9555_05_MOTOR_EN,
         BOARD_XL9555_06_AMPLIFIER,
-        BOARD_XL9555_10_PWEKEY_EN,
+        BOARD_XL9555_10_PWRKEY_EN,
     };
     for (uint8_t pin : off_pins) {
         set_power_pin(pin, false);

@@ -29,7 +29,7 @@ void setup()
         BOARD_XL9555_05_MOTOR_EN,
         BOARD_XL9555_06_AMPLIFIER,
         BOARD_XL9555_07_TOUCH_RST,
-        BOARD_XL9555_10_PWEKEY_EN,
+        BOARD_XL9555_10_PWRKEY_EN,
         BOARD_XL9555_11_KEY_RST,
         BOARD_XL9555_12_AUDIO_SEL,
     };
@@ -44,7 +44,7 @@ void setup()
     set_power_pin(BOARD_XL9555_04_LORA_SEL, true);
     set_power_pin(BOARD_XL9555_05_MOTOR_EN, false);
     set_power_pin(BOARD_XL9555_06_AMPLIFIER, false);
-    set_power_pin(BOARD_XL9555_10_PWEKEY_EN, false);
+    set_power_pin(BOARD_XL9555_10_PWRKEY_EN, false);
     set_power_pin(BOARD_XL9555_11_KEY_RST, true);
     route_audio_to_es8311(false);
     init_display_stack();

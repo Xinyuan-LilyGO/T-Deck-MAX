@@ -1080,7 +1080,7 @@ void setup()
             BOARD_XL9555_05_MOTOR_EN,
             BOARD_XL9555_06_AMPLIFIER,
             BOARD_XL9555_07_TOUCH_RST,
-            BOARD_XL9555_10_PWEKEY_EN,
+            BOARD_XL9555_10_PWRKEY_EN,
             BOARD_XL9555_11_KEY_RST,
             BOARD_XL9555_12_AUDIO_SEL,
         };

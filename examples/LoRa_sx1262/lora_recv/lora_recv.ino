@@ -2,11 +2,10 @@
 // The power control pin LORA_EN of LoRa is connected to the XL9555 chip.
 // So when using LoRa, you need to first enable the LORA_EN through the XL9555 chip;
 
-// LORA_SEL determines whether to use the internal antenna or the external antenna;
-// Enable LORA_SEL through the XL9555 chip;
-// 
-// LORA_SEL set HIGH --- external antenna
-// LORA_SEL set LOW --- internal antenna
+/* LORA_SEL determines whether to use the internal antenna 
+/  or the external antenna; Connected to XL9555 IO04
+/   HIGH --- internal antenna
+/   LOW --- external antenna  */
 
 #include <RadioLib.h>
 #include "ExtensionIOXL9555.hpp"

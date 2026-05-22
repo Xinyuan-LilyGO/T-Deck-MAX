@@ -300,8 +300,8 @@ static bool bq25896_init(void)
         PPM.setChargerConstantCurr(1024);
 
         // Enable measure
-        PPM.enableMeasure();
-        // PPM.disableMeasure();
+        // PPM.enableMeasure();
+        PPM.disableADCMeasure();
 
         return true;
     }

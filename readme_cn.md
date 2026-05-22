@@ -18,7 +18,7 @@
 
 ## :zero: 版本更新 🎁
 
-**T-Deck-Pro MAX** 更新说明：
+**T-Deck-MAX** 更新说明：
 
 - 新增 XL9555 IO 扩展芯片
 
@@ -30,7 +30,7 @@
 
 - 新增振动马达驱动芯片 DRV2605
 
-### 1、如何确认是否为 T-Deck-Pro MAX
+### 1、如何确认是否为 T-Deck-MAX
 
 下载 [WireScan](./firmware/examples/WireScan.bin) 固件，打开串口确认模组是否正常
 
@@ -42,7 +42,7 @@
 
 ## :one: 产品规格 🎁
 
-|       参数       |      T-Deck-Pro MAX          |
+|       参数       |      T-Deck-MAX          |
 | :--------------: | :----------------------------: |
 |       MCU        |            ESP32-S3            |
 |  Flash / PSRAM   |            16M / 8M            |

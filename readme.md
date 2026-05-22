@@ -18,7 +18,7 @@
 
 ## :zero: Version 🎁
 
-**T-Deck-Pro MAX** Revision Update Notes: 
+**T-Deck-MAX** Revision Update Notes: 
 
 - Added the XL9555 IO expansion chip 
 
@@ -32,7 +32,7 @@
 
 ### 1、Version
 
-How to confirm that your device is `T-Deck-Pro MAX`?
+How to confirm that your device is `T-Deck-MAX`?
 
 Download the [WireScan](./firmware/examples/WireScan.bin) firmware and then open the serial port to confirm.
 
@@ -45,7 +45,7 @@ How to download the firmware? - [click me](./firmware/)
 
 ## :one: Product 🎁
 
-|       H693       |      T-Deck-Pro MAX            |
+|       H693       |      T-Deck-MAX            |
 | :--------------: | :----------------------------: |
 |       MCU        |            ESP32-S3            |
 |  Flash / PSRAM   |            16M / 8M            |

@@ -196,7 +196,7 @@ static bool init_epd_panel()
     do {
         display.fillScreen(GxEPD_WHITE);
         display.setCursor(18, 40);
-        display.print("T-Deck-Pro MAX");
+        display.print("T-Deck-MAX");
         display.setCursor(18, 65);
         display.print("Engineering Test");
     } while (display.nextPage());

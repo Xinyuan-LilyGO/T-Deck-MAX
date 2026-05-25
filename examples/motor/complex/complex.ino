@@ -1,11 +1,7 @@
 #include <Wire.h>
+#include <TDeckMaxBoard.h>
 #include "Adafruit_DRV2605.h"
 #include "ExtensionIOXL9555.hpp"
-
-// XL9555
-#define BOARD_I2C_SDA 13
-#define BOARD_I2C_SCL 14
-#define BOARD_XL9555_05_MOTOR_EN (5) // Connected to XL9555 IO05
 
 Adafruit_DRV2605 drv;
 ExtensionIOXL9555 io;

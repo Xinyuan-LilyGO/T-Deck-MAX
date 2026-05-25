@@ -15,16 +15,13 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "Arduino.h"
+#include <TDeckMaxBoard.h>
 
 #include "bq27220.h"
 #include "Wire.h"
 
 BQ27220 bq;
 BQ27220BatteryStatus batt;
-
-#define BOARD_I2C_SDA  13
-#define BOARD_I2C_SCL  14
-
 
 void setup(void)
 {

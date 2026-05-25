@@ -8,21 +8,8 @@
 /   LOW --- external antenna  */
 
 #include <RadioLib.h>
+#include <TDeckMaxBoard.h>
 #include "ExtensionIOXL9555.hpp"
-
-// XL9555
-#define BOARD_I2C_SDA  13
-#define BOARD_I2C_SCL  14
-#define BOARD_XL9555_01_LORA_EN     (1)     // Connected to XL9555 IO01
-#define BOARD_XL9555_04_LORA_SEL    (4)     // Connected to XL9555 IO04
-
-#define BOARD_LORA_CS   3
-#define BOARD_LORA_BUSY 6
-#define BOARD_LORA_RST  4
-#define BOARD_LORA_INT  5
-#define BOARD_SPI_SCK  36
-#define BOARD_SPI_MOSI 33
-#define BOARD_SPI_MISO 47
 
 #define RADIO_FREQ  850.0
 
@@ -51,7 +38,7 @@ void setup(){
     io.configPort(ExtensionIOXL9555::PORT0, 0x00); // Set PORT0 as output ,mask = 0x00 = all pin output
     io.configPort(ExtensionIOXL9555::PORT1, 0x00);  // Set PORT1 as output ,mask = 0x00 = all pin output
     io.digitalWrite(BOARD_XL9555_01_LORA_EN, HIGH); // Enable LoRa power
-    io.digitalWrite(BOARD_XL9555_04_LORA_SEL, LOW); // use internal antenna
+    io.digitalWrite(BOARD_XL9555_04_LORA_SEL, HIGH); // use internal antenna
 
     // LoRa Init
     SPI.begin(BOARD_SPI_SCK, BOARD_SPI_MISO, BOARD_SPI_MOSI, BOARD_LORA_CS);

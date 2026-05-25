@@ -112,8 +112,8 @@ SSL
 
 ### 3. LoRa
 
-❗ 注意：
-| 使用外置天线时，LoRa 工作方式如下图所示：<br><br>需要将 `XL9555` 的 `IO04` 设为 `HIGH`。<br><br>当 `XL9555` 的 `IO04` 为 `LOW` 时，使用内置天线（默认模式）。 |
+注意：
+| 使用内置天线时，将 `XL9555` 的 `IO04` 设为 `HIGH`。<br><br>使用外置天线时，将 `XL9555` 的 `IO04` 设为 `LOW`。<br><br>当前仓库以 `HIGH` 表示内置天线，`LOW` 表示外置天线。 |
 | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ![alt text](./docs/README_img/image-1.png) |
 
@@ -205,133 +205,17 @@ SSL
 
 ## :five: 引脚定义 🎁
 
+板级宏定义已统一收敛到单一公共头文件：
+
+- [`lib/TDeckMaxBoard/src/TDeckMaxBoard.h`](./lib/TDeckMaxBoard/src/TDeckMaxBoard.h)
+
+示例代码中直接引用：
+
 ~~~c
-#pragma once
-
-// I2C 地址
-// 说明：`BQ25896` 因为一些原因停用，后续的 `T-Deck-MAX` 都将使用 `SY6970`。
-#define BOARD_I2C_ADDR_ES8311      0x18     // ES8311   音频 codec
-#define BOARD_I2C_ADDR_TOUCH       0x1A     // CST328   触摸控制器
-#define BOARD_I2C_ADDR_XL9555      0x20     // XL9555   IO 扩展
-#define BOARD_I2C_ADDR_GYROSCOPDE  0x28     // BHI260AP 陀螺仪
-#define BOARD_I2C_ADDR_KEYBOARD    0x34     // TCA8418  键盘矩阵控制器
-#define BOARD_I2C_ADDR_BQ27220     0x55     // BQ27220  电量计
-#define BOARD_I2C_ADDR_MOTOR       0x5A     // DRV2605  振动马达驱动
-#define BOARD_I2C_ADDR_BQ25896     0x6B     // BQ25896  充电管理（已停用）
-#define BOARD_I2C_ADDR_SY6970      0x6A     // SY6970   充电管理
-
-// IIC
-#define BOARD_I2C_SDA  13
-#define BOARD_I2C_SCL  14
-
-// XL9555 IO 扩展
-#define BOARD_XL9555_INT            (-1)
-#define BOARD_XL9555_SDA            BOARD_I2C_SDA
-#define BOARD_XL9555_SCL            BOARD_I2C_SCL
-#define BOARD_XL9555_00_6609_EN     (0)     // HIGH: 启用 A7682E 电源
-#define BOARD_XL9555_01_LORA_EN     (1)     // HIGH: 启用 SX1262 电源
-#define BOARD_XL9555_02_GPS_EN      (2)     // HIGH: 启用 GPS 电源
-#define BOARD_XL9555_03_1V8_EN      (3)     // HIGH: 启用 BHI260AP 电源
-/* LORA_SEL 决定使用内置天线还是外置天线
-/  连接到 XL9555 IO04
-/   HIGH --- 内置天线
-/   LOW --- 外置天线  */
-#define BOARD_XL9555_04_LORA_SEL    (4)
-#define BOARD_XL9555_05_MOTOR_EN    (5)     // HIGH: 启用 DRV2605 电源
-// 连接到 XL9555 IO06，启用功率放大器，
-// 增加扬声器音量
-#define BOARD_XL9555_06_AMPLIFIER    (6)     // HIGH: 启用功率放大器
-#define BOARD_XL9555_07_TOUCH_RST    (7)     // LOW: 复位触摸
-#define BOARD_XL9555_10_PWRKEY_EN    (8)     // HIGH: 启用 A7682E POWERKEY
-#define BOARD_XL9555_11_KEY_RST      (9)     // LOW: 复位键盘
-/* A7682E 和 ES8311 模块共用耳机和扬声器输出
-/  通过 AUDIO_SEL 选择音频输出。当 AUDIO_SEL 为
-/  HIGH : 耳机和扬声器输出 A7682E 的声音
-/  LOW :  耳机和扬声器输出 ES8311 的声音 */
-#define BOARD_XL9555_12_AUDIO_SEL   (10)
-#define BOARD_XL9555_13             (11)    // 保留
-#define BOARD_XL9555_14             (12)    // 保留
-#define BOARD_XL9555_15             (13)    // 保留
-#define BOARD_XL9555_16             (14)    // 保留
-#define BOARD_XL9555_17             (15)    // 保留
-
-// 键盘
-#define BOARD_KEYBOARD_SCL BOARD_I2C_SCL
-#define BOARD_KEYBOARD_SDA BOARD_I2C_SDA
-#define BOARD_KEYBOARD_INT 15
-#define BOARD_KEYBOARD_LED 42
-#define BOARD_KEYBOARD_RST BOARD_XL9555_11_KEY_RST  // 连接到 XL9555 的 IO11
-
-// 触摸
-#define BOARD_TOUCH_SCL BOARD_I2C_SCL
-#define BOARD_TOUCH_SDA BOARD_I2C_SDA
-#define BOARD_TOUCH_INT 12
-#define BOARD_TOUCH_RST BOARD_XL9555_07_TOUCH_RST   // 连接到 XL9555 的 IO07
-
-// 陀螺仪
-#define BOARD_GYROSCOPDE_SCL BOARD_I2C_SCL
-#define BOARD_GYROSCOPDE_SDA BOARD_I2C_SDA
-#define BOARD_GYROSCOPDE_INT 21
-#define BOARD_GYROSCOPDE_RST -1
-
-// 马达
-#define BOARD_MOTOR_SCL BOARD_I2C_SCL
-#define BOARD_MOTOR_SDA BOARD_I2C_SDA
-#define BOARD_MOTOR_EN BOARD_XL9555_05_MOTOR_EN     // 连接到 XL9555 的 IO05
-
-// ES8311
-#define BOARD_ES8311_SCL BOARD_I2C_SCL
-#define BOARD_ES8311_SDA BOARD_I2C_SDA
-#define BOARD_ES8311_MCLK       38
-#define BOARD_ES8311_SCLK       39
-#define BOARD_ES8311_ASDOUT     40
-#define BOARD_ES8311_LRCK       18
-#define BOARD_ES8311_DSDIN      17
-
-// SPI
-#define BOARD_SPI_SCK  36
-#define BOARD_SPI_MOSI 33
-#define BOARD_SPI_MISO 47
-
-// 显示屏
-#define BOARD_EPD_BL   41
-#define BOARD_EPD_SCK  BOARD_SPI_SCK
-#define BOARD_EPD_MOSI BOARD_SPI_MOSI
-#define BOARD_EPD_DC   35
-#define BOARD_EPD_CS   34
-#define BOARD_EPD_BUSY 37
-#define BOARD_EPD_RST  9
-
-// TF 卡
-#define BOARD_SD_CS   48
-#define BOARD_SD_SCK  BOARD_SPI_SCK
-#define BOARD_SD_MOSI BOARD_SPI_MOSI
-#define BOARD_SD_MISO BOARD_SPI_MISO
-
-// Lora
-#define BOARD_LORA_SCK  BOARD_SPI_SCK
-#define BOARD_LORA_MOSI BOARD_SPI_MOSI
-#define BOARD_LORA_MISO BOARD_SPI_MISO
-#define BOARD_LORA_CS   3
-#define BOARD_LORA_BUSY 6
-#define BOARD_LORA_RST  4
-#define BOARD_LORA_INT  5
-
-// GPS
-#define BOARD_GPS_RXD 2
-#define BOARD_GPS_TXD 16
-#define BOARD_GPS_PPS 1
-
-// A7682E 模块
-#define BOARD_A7682E_RI     7
-#define BOARD_A7682E_ITR    8
-#define BOARD_A7682E_RXD    10
-#define BOARD_A7682E_TXD    11
-#define BOARD_A7682E_PWRKEY BOARD_XL9555_10_PWRKEY_EN   // 连接到 XL9555 扩展芯片的 IO10
-
-// Boot 引脚
-#define BOARD_BOOT_PIN  0
+#include <TDeckMaxBoard.h>
 ~~~
+
+引脚映射: [pinmap](./docs/pinmap_cn.md)
 
 ## :six: 功耗测试 🎁
 

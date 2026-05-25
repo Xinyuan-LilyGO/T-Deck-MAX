@@ -1,14 +1,6 @@
 
 #include <Adafruit_TCA8418.h>
-#define BOARD_I2C_ADDR_KEYBOARD 0x34
-#define BOARD_KEYBOARD_SDA 13
-#define BOARD_KEYBOARD_SCL 14
-#define BOARD_KEYBOARD_INT 15
-#define BOARD_KEYBOARD_LED 42
-
-// Connect the IO11 of the chip XL9555
-#define BOARD_XL9555_11_KEY_RST     (9)
-#define BOARD_KEYBOARD_RST BOARD_XL9555_11_KEY_RST  
+#include <TDeckMaxBoard.h>
 //
 #define KEYPAD_ROWS 4
 #define KEYPAD_COLS 10

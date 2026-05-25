@@ -1,10 +1,7 @@
 #include <Wire.h>
+#include <TDeckMaxBoard.h>
 #define XPOWERS_CHIP_BQ25896
 #include <XPowersLib.h>
-
-// IIC
-#define BOARD_I2C_SDA  13
-#define BOARD_I2C_SCL  14
 
 XPowersPPM PPM;
 

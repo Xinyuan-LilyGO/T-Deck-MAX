@@ -1,11 +1,7 @@
 #ifndef _DISPLAY_EPD_W21_SPI_
 #define _DISPLAY_EPD_W21_SPI_
 #include "Arduino.h"
-
-#define BOARD_EPD_DC   35
-#define BOARD_EPD_CS   34
-#define BOARD_EPD_BUSY 37
-#define BOARD_EPD_RST  9
+#include <TDeckMaxBoard.h>
 
 
 #define  Arduino_UNO

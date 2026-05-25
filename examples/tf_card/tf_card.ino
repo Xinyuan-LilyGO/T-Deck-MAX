@@ -41,10 +41,7 @@
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
-
-#define BOARD_EPD_CS   34
-#define BOARD_LORA_CS   3
-#define BOARD_LORA_RST  4
+#include <TDeckMaxBoard.h>
 /*
 Uncomment and set up if you want to use custom pins for the SPI communication
 #define REASSIGN_PINS
@@ -55,10 +52,10 @@ int cs = -1;
 */
 
 #define REASSIGN_PINS
-int sck =  36;
-int miso = 47;
-int mosi = 33;
-int cs =   48;
+int sck = BOARD_SD_SCK;
+int miso = BOARD_SD_MISO;
+int mosi = BOARD_SD_MOSI;
+int cs = BOARD_SD_CS;
 
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){

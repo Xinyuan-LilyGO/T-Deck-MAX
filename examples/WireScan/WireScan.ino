@@ -1,18 +1,6 @@
 #include "Wire.h"
+#include <TDeckMaxBoard.h>
 #include <SensorWireHelper.h>
-
-// IIC
-#define BOARD_I2C_SDA 13
-#define BOARD_I2C_SCL 14
-
-#define BOARD_I2C_ADDR_ES8311 0x18
-#define BOARD_I2C_ADDR_TOUCH 0x1A
-#define BOARD_I2C_ADDR_XL9555 0x20
-#define BOARD_I2C_ADDR_GYROSCOPDE 0x28
-#define BOARD_I2C_ADDR_KEYBOARD 0x34
-#define BOARD_I2C_ADDR_BQ27220 0x55
-#define BOARD_I2C_ADDR_MOTOR 0x5A
-#define BOARD_I2C_ADDR_BQ25896 0x6B
 
 int dev_mark = 0;
 

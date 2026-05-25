@@ -30,21 +30,18 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
+#include <TDeckMaxBoard.h>
 #include "SensorBHI260AP.hpp"
 #include "ExtensionIOXL9555.hpp"
 
 // The power control pin 1V8_EN of Gyroscope is connected to the XL9555 chip.
 // So when using Gyroscope, you need to first enable the 1V8_EN through the XL9555 chip;
 
-// XL9555
-#define BOARD_I2C_SDA  13
-#define BOARD_I2C_SCL  14
-#define BOARD_XL9555_03_1V8_EN     (3)     // Connected to XL9555 IO03
 // Gyroscope
-#define BHI260AP_SDA          13
-#define BHI260AP_SCL          14
-#define BHI260AP_IRQ          21
-#define BHI260AP_RST          -1
+#define BHI260AP_SDA BOARD_GYROSCOPDE_SDA
+#define BHI260AP_SCL BOARD_GYROSCOPDE_SCL
+#define BHI260AP_IRQ BOARD_GYROSCOPDE_INT
+#define BHI260AP_RST BOARD_GYROSCOPDE_RST
 
 SensorBHI260AP bhy;
 ExtensionIOXL9555 io;

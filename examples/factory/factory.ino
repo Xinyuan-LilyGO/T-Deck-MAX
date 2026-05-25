@@ -1092,7 +1092,7 @@ void setup()
         // LOW --- external antenna 
         // HIGH --- internal antenna (default)
         // xl9555_io.pinMode(BOARD_XL9555_04_LORA_SEL, OUTPUT);
-        // xl9555_io.digitalWrite(BOARD_XL9555_04_LORA_SEL, LOW);
+        // xl9555_io.digitalWrite(BOARD_XL9555_04_LORA_SEL, HIGH);
 
         // Ensure touch controller exits any "half-powered" state after a power cut:
         // provide a deterministic reset pulse via XL9555 IO07 before touch init.

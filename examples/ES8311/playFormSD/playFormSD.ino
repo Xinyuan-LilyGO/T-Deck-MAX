@@ -1,4 +1,5 @@
 #include "Arduino.h"
+#include <TDeckMaxBoard.h>
 #include "esp_codec.h"
 #include "ExtensionIOXL9555.hpp"
 
@@ -7,48 +8,6 @@
 #include <AudioFileSourceFunction.h>
 #include <AudioFileSourceID3.h>
 #include <AudioGeneratorMP3.h>
-
-
-#define BOARD_EPD_CS   34
-#define BOARD_LORA_CS   3
-#define BOARD_LORA_RST  4
-
-// XL9555
-#define BOARD_I2C_SDA 13
-#define BOARD_I2C_SCL 14
-
-#define BOARD_XL9555_00_6609_EN     (0)
-#define BOARD_XL9555_10_PWRKEY_EN   (8)
-// Connected to XL9555 IO06, enable power amplifier,
-// increase the volume of the speaker
-#define BOARD_XL9555_06_AMPLIFIER (6) // Connected to XL9555 IO06
-/* Module A7682E and ES8311 share the output for headphones and speakers.
-/  Select the audio output through AUDIO_SEL. When AUDIO_SEL is
-/  HIGH : the headphones and speakers output the sound from A7682E.
-/  LOW :  the headphones and speakers output the sound from ES8311.
-*/
-#define BOARD_XL9555_12_AUDIO_SEL (10) // Connected to XL9555 IO12
-
-// SPI
-#define BOARD_SPI_SCK  36
-#define BOARD_SPI_MOSI 33
-#define BOARD_SPI_MISO 47
-
-// ES8311
-#define BOARD_I2C_ADDR_ES8311   0x18
-#define BOARD_ES8311_SCL        BOARD_I2C_SCL
-#define BOARD_ES8311_SDA        BOARD_I2C_SDA
-#define BOARD_ES8311_MCLK       38
-#define BOARD_ES8311_SCLK       39
-#define BOARD_ES8311_ASDOUT     40
-#define BOARD_ES8311_LRCK       18
-#define BOARD_ES8311_DSDIN      17
-
-// SD card
-#define BOARD_SD_CS   48
-#define BOARD_SD_SCK  BOARD_SPI_SCK
-#define BOARD_SD_MOSI BOARD_SPI_MOSI
-#define BOARD_SD_MISO BOARD_SPI_MISO
 
 class EspAudioOutput : public AudioOutput
 {

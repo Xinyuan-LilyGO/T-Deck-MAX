@@ -1,16 +1,9 @@
 #include <SPI.h>
+#include <TDeckMaxBoard.h>
 //EPD
 #include "Display_EPD_W21_spi.h"
 #include "Display_EPD_W21.h"
 #include "Ap_29demo.h"  
-
-#define BOARD_LORA_CS   3
-#define BOARD_LORA_RST  4
-#define BOARD_SD_CS   48
-#define BOARD_EPD_CS   34
-
-#define BOARD_EPD_SCK  36
-#define BOARD_EPD_MOSI 33
 
 void setup() {
 

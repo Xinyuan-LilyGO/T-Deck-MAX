@@ -1,20 +1,7 @@
 
 #include <TinyGPS++.h>
+#include <TDeckMaxBoard.h>
 #include "ExtensionIOXL9555.hpp"
-
-// XL9555
-#define BOARD_I2C_SDA  13
-#define BOARD_I2C_SCL  14
-#define BOARD_XL9555_02_GPS_EN      (2)     // Connected to XL9555 IO01
-
-// GPS      ESP32 
-// RX  ---  TX IO2
-// TX  ---  RX IO16
-#define BOARD_GPS_RXD 2
-#define BOARD_GPS_TXD 16
-#define BOARD_GPS_PPS 1
-#define SerialMon Serial
-#define SerialGPS Serial2
 
 void displayInfo();
 static bool GPS_Recovery();

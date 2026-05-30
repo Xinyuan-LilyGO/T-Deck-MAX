@@ -223,7 +223,7 @@ Use it directly in examples:
 #include <TDeckMaxBoard.h>
 ~~~
 
-Pin Mapping : [pinmap](./docs/pinmap_cn.md)
+Pin Mapping : [pinmap](./docs/pinmap.md)
 
 ## :six: Test 🎁
 

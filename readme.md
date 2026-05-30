@@ -74,9 +74,14 @@ Before flashing firmware, connect the device to your computer, select the correc
 
 - Download the tool from [LILYGO Spark](https://lilygo.cc/en-us/pages/lilygo-spark?srsltid=AfmBOoorTB7ptFu2LQNLRnoI2SA0zBGJTN6JpI9J3hmHEkKhBQSmeu0Y).
 
-- Search for your device name and download the corresponding firmware.
+- Search for your device `T-Deck Max` and download the corresponding firmware.
 
 ![alt text](./docs/README_img/lilygo_spark.png)
+
+| Firmware                              | Note                | Github                                                                |
+| ------------------------------------- | ------------------- | --------------------------------------------------------------------- |
+| T-Deck-MAX_xxxxx.bin                  | Factory program<br> | -                                                                     |
+| crosspoint_lilygo_t_deck_max_xxxx.bin | Reader program      | [TDeckMax-Reader](https://github.com/ShallowGreen123/TDeckMax-Reader) |
 
 ## :two: Module 🎁
 

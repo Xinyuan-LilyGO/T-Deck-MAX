@@ -71,9 +71,14 @@
 
 - 从 [LILYGO Spark](https://lilygo.cc/en-us/pages/lilygo-spark?srsltid=AfmBOoorTB7ptFu2LQNLRnoI2SA0zBGJTN6JpI9J3hmHEkKhBQSmeu0Y) 下载软件。
 
-- 搜索你的设备名称，并下载对应程序。
+- 搜索你的设备名称 `T-Deck Max`，并下载对应程序。
 
 ![alt text](./docs/README_img/lilygo_spark.png)
+
+| Firmware                              | Note                | Github                                                                |
+| ------------------------------------- | ------------------- | --------------------------------------------------------------------- |
+| T-Deck-MAX_xxxxx.bin                  | Factory program<br> | -                                                                     |
+| crosspoint_lilygo_t_deck_max_xxxx.bin | Reader program      | [TDeckMax-Reader](https://github.com/ShallowGreen123/TDeckMax-Reader) |
 
 ## :two: 模块说明 🎁
 

@@ -291,6 +291,7 @@ bool init_touch_if_needed()
         return true;
     }
     pulse_touch_reset();
+    hyn_touch_attach_xl9555(&xl9555_io);
     g_touch_ready = hyn_touch_init();
     return g_touch_ready;
 }

@@ -6,7 +6,7 @@
 #define CST3xx_BIN_SIZE    (24*1024 + 24)
 #define SOFT_RST_ENABLE     (0)
 
-static char *TAG = "hyn_cst3xx";
+static const char *TAG = "hyn_cst3xx";
 static struct hyn_ts_data *hyn_3xxdata = NULL;
 static const u8 gest_map_tbl[33] = {0xff,4,1,3,2,5,12,6,7,7,9,11,10,13,12,7,7,6,10,6,5,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,14};
 
@@ -149,7 +149,11 @@ static int cst3xx_set_workmode(enum work_mode mode,u8 enable)
 static int cst3xx_supend(void)
 {
     HYN_ENTER();
-    cst3xx_set_workmode(DEEPSLEEP,0);
+    // cst3xx_set_workmode(DEEPSLEEP,0);
+    ESP_LOGI(TAG,"touch sleep");
+
+    hyn_irq_set(hyn_3xxdata,DISABLE);
+    hyn_wr_reg(hyn_3xxdata,0xD105,2,NULL,0);
     return 0;
 }
 

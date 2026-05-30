@@ -38,13 +38,15 @@ extern "C" {
 #undef TRUE
 #undef DISABLE
 #undef ENABLE
-#define NULL  ((void*)0)
+// #define NULL  ((void*)0)
 #define FALSE (-1)
 #define TRUE  (0)
 #define DISABLE (0)
 #define ENABLE  (1)
 
+#ifndef HIGH
 #define HIGH   (1)
+#endif
 
 
 #define PS_FAR_AWAY    1

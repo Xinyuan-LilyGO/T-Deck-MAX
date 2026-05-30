@@ -67,8 +67,12 @@ void hyn_delay_ms(int cnt)
 /**gpio ctl*/
 int gpio_set_value(uint32_t gpio_id,bool vlue)
 {
-    if (hyn_platform_gpio_set_value(gpio_id, vlue ? 1 : 0)) {
+    int handled = hyn_platform_gpio_set_value(gpio_id, vlue ? 1 : 0);
+    if (handled > 0) {
         return 0;
+    }
+    if (handled < 0 || (int32_t)gpio_id < 0) {
+        return -1;
     }
     gpio_set_level(gpio_id,vlue);
     return 0;
@@ -76,8 +80,12 @@ int gpio_set_value(uint32_t gpio_id,bool vlue)
 bool gpio_get_value(uint32_t gpio_id) 
 {
     int value = 0;
-    if (hyn_platform_gpio_get_value(gpio_id, &value)) {
+    int handled = hyn_platform_gpio_get_value(gpio_id, &value);
+    if (handled > 0) {
         return value ? true : false;
+    }
+    if (handled < 0 || (int32_t)gpio_id < 0) {
+        return false;
     }
     return gpio_get_level(gpio_id);
 }

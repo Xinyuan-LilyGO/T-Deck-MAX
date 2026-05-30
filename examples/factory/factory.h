@@ -18,6 +18,7 @@
 #include "ExtensionIOXL9555.hpp"
 #include "Adafruit_DRV2605.h"
 #include "esp_codec.h"
+#include <HynTouch.h>
 
 /*********************************************************************************
  *                                   DEFINES
@@ -67,7 +68,4 @@ union flush_buf_pixel
 void disp_full_refr(void); // Next global refresh
 void disp_partial_refr_for(uint32_t duration_ms);
 
-int hyn_touch_init(void);
-uint8_t hyn_touch_get_point(int16_t *x_array, int16_t *y_array, uint8_t get_point);
-void hyn_sleep(void);
 #endif

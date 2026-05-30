@@ -12,6 +12,7 @@
 #include <BLEDevice.h>
 #include <BLEScan.h>
 #include <GxEPD2_BW.h>
+#include <HynTouch.h>
 #include <RadioLib.h>
 #include <TinyGPS++.h>
 #include <TinyGsmClient.h>
@@ -268,13 +269,6 @@ extern const char *kQuickKeyTargets;
 extern const char *kDeepKeyTargets;
 extern const int kMotorEffects[3];
 extern const int kDeepMenuMap[9];
-
-int hyn_touch_init(void);
-uint8_t hyn_touch_get_point(int16_t *x_array, int16_t *y_array, uint8_t get_point);
-bool hyn_touch_get_key_state(uint8_t key_id);
-bool hyn_touch_get_key_seen(uint8_t key_id);
-void hyn_touch_clear_key_seen(void);
-void hyn_sleep(void);
 
 const char *status_text(TestStatus status);
 const char *status_badge(TestStatus status);

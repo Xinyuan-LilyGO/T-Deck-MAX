@@ -10,7 +10,7 @@
 #define MODULE_ID_ADDR      (0xA400)
 #define PARTNUM_ADDR        (0xFF10)
 
-static char * TAG = "hyn_cst66xx";
+static const char *TAG = "hyn_cst66xx";
 static struct hyn_ts_data *hyn_66xxdata = NULL;
 static const u8 gest_map_tbl[] = { 
     IDX_POWER,   //GESTURE_LABEL_CLICK, 

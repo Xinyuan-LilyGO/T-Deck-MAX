@@ -82,6 +82,14 @@ static uint32_t phone_test_audio_restore_ms = 0;
 static uint32_t phone_history_sequence = 0;
 static char phone_end_reason[UI_PHONE_STATUS_LEN] = {0};
 
+static void factory_touch_key_event(uint8_t key_id, bool pressed, void *user_data)
+{
+    (void)user_data;
+    if (pressed && key_id < 3) {
+        scr_mgr_pop(false);
+    }
+}
+
 /*********************************************************************************
  *                              STATIC PROTOTYPES
  * *******************************************************************************/
@@ -1107,6 +1115,8 @@ void setup()
             delay(1000);
         }
     }
+    hyn_touch_attach_xl9555(&xl9555_io);
+    hyn_touch_set_key_callback(factory_touch_key_event, nullptr);
 
     Serial.print("PORT0:0b");
     Serial.print(xl9555_io.readPort(ExtensionIOXL9555::PORT0), BIN);

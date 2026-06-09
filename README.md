@@ -56,7 +56,7 @@ How to download the firmware? - [click me](./firmware/)
 | Battery Capacity |          3.7V-1500mAh          |
 |   Battery Chip   | SY6970 (0x6A), BQ27220 (0x55) |
 |      Audio       |         ES8311 (0x18)          |
-|      Touch       |         CST328 (0x1A)          |
+|      Touch       |         CST3530 (0x1A)          |
 |    Gyroscope     |        BHI260AP (0x28)         |
 |     Keyboard     |         TCA8418 (0x34)         |
 |   IO Expansion   |         XL9555 (0x20)          |
@@ -206,7 +206,7 @@ The following lists all examples to help you quickly get started with each modul
 | Arduino Runs On                      | Core1                              |
 | USB Firmware MSC On Boot             | Disable                            |
 | Partition Scheme                     | **16M Flash(3M APP/9.9MB FATFS)**  |
-| PSRAM                                | **OPI PSRAM**                      |
+| PSRAM                                | **QSPI PSRAM**                      |
 | Upload Mode                          | **UART0/Hardware CDC**             |
 | Upload Speed                         | 921600                             |
 | USB Mode                             | **CDC and JTAG**                   |

@@ -53,7 +53,7 @@
 | 电池容量 |          3.7V-1500mAh          |
 |   电池芯片   | SY6970 (0x6A), BQ27220 (0x55) |
 |      音频       |         ES8311 (0x18)          |
-|      触摸       |         CST328 (0x1A)          |
+|      触摸       |         CST3530 (0x1A)          |
 |    陀螺仪     |        BHI260AP (0x28)         |
 |     键盘     |         TCA8418 (0x34)         |
 |   IO 扩展   |         XL9555 (0x20)          |
@@ -203,7 +203,7 @@ SSL
 | Arduino Runs On                      | Core1                             |
 | USB Firmware MSC On Boot             | 禁用                              |
 | Partition Scheme                     | **16M Flash(3M APP/9.9MB FATFS)**  |
-| PSRAM                                | **OPI PSRAM**                      |
+| PSRAM                                | **QSPI PSRAM**                      |
 | Upload Mode                          | **UART0/Hardware CDC**             |
 | Upload Speed                         | 921600                            |
 | USB Mode                             | **CDC and JTAG**                   |

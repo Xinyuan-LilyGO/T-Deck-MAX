@@ -1375,13 +1375,236 @@ static lv_timer_t *wifi_scan_timer = NULL;
 
 static ui_wifi_scan_info_t wifi_info_list[UI_WIFI_SCAN_ITEM_MAX];
 static lv_obj_t *wifi_list = NULL;
-static char wifi_selected_ssid[32];
+static char wifi_selected_ssid[UI_WIFI_SSID_MAX_LEN];
 static char wifi_password_input_buf[64];
+static lv_obj_t *wifi_ssid_title_lab = NULL;
 static lv_obj_t *wifi_password_ta = NULL;
 static lv_timer_t *wifi_connect_timer = NULL;
 static lv_obj_t *wifi_connect_status_lab = NULL;
+static lv_obj_t *wifi_password_hint_lab = NULL;
 static bool wifi_connect_in_progress = false;
 static lv_timer_t *wifi_keypad_timer = NULL;
+#define WIFI_KEYPAD_ROWS 4
+#define WIFI_KEYPAD_COLS 10
+#define WIFI_PASSWORD_LONG_PRESS_MS 650UL
+#define WIFI_CONNECT_TIMEOUT_MS 15000UL
+#define WIFI_PASSWORD_REFRESH_MS 250UL
+#define WIFI_PASSWORD_HINT_TEXT "ALT abc/ABC  Hold UP=chars\nENT=OK  DEL=erase/clear  SYM=show/back"
+
+static const char wifi_password_raw_map[WIFI_KEYPAD_ROWS][WIFI_KEYPAD_COLS] = {
+    {'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'},
+    {'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', KEYPAD_KEY_DEL},
+    {KEYPAD_KEY_ALT, 'z', 'x', 'c', 'v', 'b', 'n', 'm', '$', KEYPAD_KEY_ENT},
+    {KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_UP, '0', KEYPAD_KEY_SPACE, KEYPAD_KEY_SYM, KEYPAD_KEY_UP},
+};
+
+static const char wifi_password_lowercase_map[WIFI_KEYPAD_ROWS][WIFI_KEYPAD_COLS] = {
+    {'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'},
+    {'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', KEYPAD_KEY_DEL},
+    {KEYPAD_KEY_ALT, 'z', 'x', 'c', 'v', 'b', 'n', 'm', '$', KEYPAD_KEY_ENT},
+    {KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_UP, KEYPAD_KEY_NONE, KEYPAD_KEY_SPACE, KEYPAD_KEY_SYM, KEYPAD_KEY_UP},
+};
+
+static const char wifi_password_uppercase_map[WIFI_KEYPAD_ROWS][WIFI_KEYPAD_COLS] = {
+    {'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'},
+    {'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', KEYPAD_KEY_DEL},
+    {KEYPAD_KEY_ALT, 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '$', KEYPAD_KEY_ENT},
+    {KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_UP, KEYPAD_KEY_NONE, KEYPAD_KEY_SPACE, KEYPAD_KEY_SYM, KEYPAD_KEY_UP},
+};
+
+static const char wifi_password_chat_map[WIFI_KEYPAD_ROWS][WIFI_KEYPAD_COLS] = {
+    {'#', '1', '2', '3', '(', ')', '_', '-', '+', '@'},
+    {'*', '4', '5', '6', '/', ':', ';', '\'', '"', KEYPAD_KEY_DEL},
+    {KEYPAD_KEY_ALT, '7', '8', '9', '?', '!', ',', '.', KEYPAD_KEY_NONE, KEYPAD_KEY_ENT},
+    {KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_UP, KEYPAD_KEY_NONE, KEYPAD_KEY_SPACE, KEYPAD_KEY_SYM, KEYPAD_KEY_UP},
+};
+
+static bool wifi_password_uppercase = false;
+static bool wifi_password_visible = false;
+static uint8_t wifi_password_shift_hold_count = 0;
+static uint32_t wifi_password_del_press_ms = 0;
+static uint32_t wifi_password_sym_press_ms = 0;
+static uint32_t wifi_connect_started_ms = 0;
+static wl_status_t wifi_last_status = WL_IDLE_STATUS;
+static bool wifi_password_del_long_handled = false;
+static bool wifi_password_sym_long_handled = false;
+static bool wifi_password_status_locked = false;
+
+static void wifi_password_set_status(const char *text, lv_color_t color)
+{
+    if (wifi_connect_status_lab == NULL) {
+        return;
+    }
+
+    lv_label_set_text(wifi_connect_status_lab, text);
+    lv_obj_set_style_text_color(wifi_connect_status_lab, color, LV_PART_MAIN);
+}
+
+static void wifi_password_set_hint_text(const char *text)
+{
+    if (wifi_password_hint_lab == NULL) {
+        return;
+    }
+
+    lv_label_set_text(wifi_password_hint_lab, text != NULL ? text : "");
+}
+
+static void wifi_password_set_connected_view(bool connected)
+{
+    if (wifi_ssid_title_lab != NULL) {
+        if (connected) {
+            lv_obj_add_flag(wifi_ssid_title_lab, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_clear_flag(wifi_ssid_title_lab, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+
+    if (wifi_password_ta != NULL) {
+        if (connected) {
+            lv_obj_add_flag(wifi_password_ta, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_clear_flag(wifi_password_ta, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+
+    if (wifi_connect_status_lab != NULL) {
+        lv_obj_set_width(wifi_connect_status_lab, lv_pct(96));
+        lv_obj_set_height(wifi_connect_status_lab, LV_SIZE_CONTENT);
+        if (connected) {
+            lv_obj_align(wifi_connect_status_lab, LV_ALIGN_CENTER, 0, -8);
+            lv_obj_set_style_text_font(wifi_connect_status_lab, FONT_BOLD_SIZE_16, LV_PART_MAIN);
+        } else {
+            lv_obj_align(wifi_connect_status_lab, LV_ALIGN_TOP_MID, 0, 102);
+            lv_obj_set_style_text_font(wifi_connect_status_lab, FONT_BOLD_SIZE_14, LV_PART_MAIN);
+        }
+    }
+
+    if (connected) {
+        wifi_password_set_hint_text("Long SYM = Back");
+    } else {
+        wifi_password_set_hint_text(WIFI_PASSWORD_HINT_TEXT);
+    }
+}
+
+static void wifi_password_lock_status(bool locked)
+{
+    wifi_password_status_locked = locked;
+}
+
+static void wifi_password_request_refresh(uint32_t duration_ms = WIFI_PASSWORD_REFRESH_MS, bool full_refresh = false)
+{
+    if (full_refresh) {
+        ui_disp_full_refr();
+        return;
+    }
+
+    ui_disp_partial_refr_for(duration_ms);
+}
+
+static void wifi_password_show_connected_info(void)
+{
+    String ip_text = WiFi.localIP().toString();
+    long rssi = WiFi.RSSI();
+    char info[160] = {0};
+    lv_snprintf(info, sizeof(info),
+                "WiFi: %s\nIP: %s\nRSSI: %ld dBm",
+                WiFi.SSID().c_str(),
+                ip_text.c_str(),
+                rssi);
+    wifi_password_set_connected_view(true);
+    wifi_password_set_status(info, DECKPRO_COLOR_FG);
+}
+
+static void wifi_password_apply_visibility(void)
+{
+    if (wifi_password_ta == NULL) {
+        return;
+    }
+
+    lv_textarea_set_password_mode(wifi_password_ta, !wifi_password_visible);
+}
+
+static void wifi_password_reset_state(void)
+{
+    wifi_password_uppercase = false;
+    wifi_password_visible = false;
+    wifi_password_shift_hold_count = 0;
+    wifi_password_del_press_ms = 0;
+    wifi_password_sym_press_ms = 0;
+    wifi_connect_started_ms = 0;
+    wifi_last_status = WL_IDLE_STATUS;
+    wifi_password_del_long_handled = false;
+    wifi_password_sym_long_handled = false;
+    wifi_password_status_locked = false;
+}
+
+static void wifi_password_refresh_status_hint(void)
+{
+    wifi_password_set_connected_view(false);
+
+    if (wifi_connect_status_lab == NULL || wifi_connect_in_progress || wifi_password_status_locked) {
+        return;
+    }
+
+    const char *mode = wifi_password_shift_hold_count > 0 ? "chars" :
+                       (wifi_password_uppercase ? "ABC" : "abc");
+    const char *visibility = wifi_password_visible ? "show" : "hide";
+    char status[96] = {0};
+    lv_snprintf(status, sizeof(status), "SSID: %.20s  %s  %s", wifi_selected_ssid, mode, visibility);
+    wifi_password_set_status(status, DECKPRO_COLOR_FG);
+}
+
+static const char (*wifi_password_active_map(void))[WIFI_KEYPAD_COLS]
+{
+    if (wifi_password_shift_hold_count > 0) {
+        return wifi_password_chat_map;
+    }
+    return wifi_password_uppercase ? wifi_password_uppercase_map : wifi_password_lowercase_map;
+}
+
+static char wifi_password_map_key(char key)
+{
+    const char (*active_map)[WIFI_KEYPAD_COLS] = wifi_password_active_map();
+
+    for (int row = 0; row < WIFI_KEYPAD_ROWS; ++row) {
+        for (int col = 0; col < WIFI_KEYPAD_COLS; ++col) {
+            if (wifi_password_raw_map[row][col] == key) {
+                return active_map[row][col];
+            }
+        }
+    }
+
+    return KEYPAD_KEY_NONE;
+}
+
+static void wifi_password_clear_text(void)
+{
+    if (wifi_password_ta == NULL) {
+        return;
+    }
+
+    lv_textarea_set_text(wifi_password_ta, "");
+    wifi_password_lock_status(false);
+    wifi_password_request_refresh();
+}
+
+static void wifi_password_toggle_visibility(void)
+{
+    wifi_password_visible = !wifi_password_visible;
+    wifi_password_apply_visibility();
+    wifi_password_lock_status(false);
+    wifi_password_request_refresh();
+}
+
+static void wifi_password_cancel(void)
+{
+    wifi_connect_in_progress = false;
+    memset(wifi_selected_ssid, 0, sizeof(wifi_selected_ssid));
+    memset(wifi_password_input_buf, 0, sizeof(wifi_password_input_buf));
+    wifi_password_reset_state();
+    wifi_password_set_connected_view(false);
+    scr_mgr_pop(false);
+}
 
 static void scr4_2_btn_event_cb(lv_event_t * e)
 {
@@ -1501,103 +1724,218 @@ static scr_lifecycle_t screen4_2 = {
 
 // --------------------- screen 4.3 --------------------- WiFi Password Input
 #if 1
-static void wifi_password_back_event_cb(lv_event_t *e)
-{
-    if (e->code == LV_EVENT_CLICKED) {
-        if (wifi_keypad_timer) {
-            lv_timer_del(wifi_keypad_timer);
-            wifi_keypad_timer = NULL;
-        }
-        if (wifi_connect_timer) {
-            lv_timer_del(wifi_connect_timer);
-            wifi_connect_timer = NULL;
-        }
-        wifi_connect_in_progress = false;
-        memset(wifi_selected_ssid, 0, sizeof(wifi_selected_ssid));
-        memset(wifi_password_input_buf, 0, sizeof(wifi_password_input_buf));
-        scr_mgr_pop(false);
-    }
-}
-
-static void wifi_password_connect_event_cb(lv_event_t *e)
-{
-    if (e->code == LV_EVENT_CLICKED) {
-        if (wifi_connect_in_progress) return;
-
-        const char *password = lv_textarea_get_text(wifi_password_ta);
-        if (password == NULL || strlen(password) == 0) {
-            lv_label_set_text(wifi_connect_status_lab, "Password cannot be empty");
-            return;
-        }
-
-        ui_wifi_connect(wifi_selected_ssid, password);
-        wifi_connect_in_progress = true;
-        lv_label_set_text(wifi_connect_status_lab, "Connecting...");
-    }
-}
-
 static void wifi_connect_timer_cb(lv_timer_t *t)
 {
     (void)t;
     wl_status_t status = ui_wifi_get_status();
+    uint32_t elapsed_ms = wifi_connect_started_ms > 0 ? (millis() - wifi_connect_started_ms) : 0;
+
+    if (status != wifi_last_status) {
+        Serial.printf("[WiFi UI] status=%d elapsed=%lu ssid=%s\n",
+                      (int)status,
+                      (unsigned long)elapsed_ms,
+                      wifi_selected_ssid);
+        wifi_last_status = status;
+    }
 
     if (status == WL_CONNECTED) {
-        lv_timer_del(wifi_connect_timer);
-        wifi_connect_timer = NULL;
+        lv_timer_pause(wifi_connect_timer);
         wifi_connect_in_progress = false;
-        lv_label_set_text(wifi_connect_status_lab, "Connected!");
-        lv_obj_set_style_text_color(wifi_connect_status_lab, lv_color_hex(0x008800), LV_PART_MAIN);
-    } else if (status == WL_CONNECT_FAILED || status == WL_NO_SSID_AVAIL ||
-               status == WL_IDLE_STATUS || status == WL_DISCONNECTED) {
-        lv_timer_del(wifi_connect_timer);
-        wifi_connect_timer = NULL;
+        wifi_connect_started_ms = 0;
+        wifi_password_lock_status(true);
+        wifi_password_show_connected_info();
+        wifi_password_request_refresh(0, true);
+    } else if (status == WL_CONNECT_FAILED || status == WL_NO_SSID_AVAIL) {
+        lv_timer_pause(wifi_connect_timer);
         wifi_connect_in_progress = false;
-        lv_label_set_text(wifi_connect_status_lab, "Connection failed");
-        lv_obj_set_style_text_color(wifi_connect_status_lab, lv_color_hex(0x880000), LV_PART_MAIN);
+        wifi_connect_started_ms = 0;
+        wifi_password_lock_status(true);
+        wifi_password_set_status("Connection failed", DECKPRO_COLOR_FG);
+        wifi_password_request_refresh(0, true);
+    } else if ((status == WL_CONNECTION_LOST || status == WL_DISCONNECTED) &&
+               elapsed_ms >= 5000UL) {
+        lv_timer_pause(wifi_connect_timer);
+        wifi_connect_in_progress = false;
+        wifi_connect_started_ms = 0;
+        wifi_password_lock_status(true);
+        wifi_password_set_status("Disconnected\nCheck SSID / password", DECKPRO_COLOR_FG);
+        wifi_password_request_refresh(0, true);
+    } else if (wifi_connect_started_ms > 0 &&
+               elapsed_ms >= WIFI_CONNECT_TIMEOUT_MS) {
+        lv_timer_pause(wifi_connect_timer);
+        wifi_connect_in_progress = false;
+        wifi_connect_started_ms = 0;
+        wifi_password_lock_status(true);
+        wifi_password_set_status("Connection timeout", DECKPRO_COLOR_FG);
+        wifi_password_request_refresh(0, true);
+    }
+}
+
+static void wifi_password_submit(void)
+{
+    if (wifi_connect_in_progress) {
+        return;
+    }
+
+    const char *password = lv_textarea_get_text(wifi_password_ta);
+    if (password == NULL || strlen(password) == 0) {
+        wifi_password_lock_status(true);
+        wifi_password_set_status("Password cannot be empty", DECKPRO_COLOR_FG);
+        wifi_password_request_refresh(0, true);
+        return;
+    }
+
+    if (!ui_wifi_connect(wifi_selected_ssid, password)) {
+        wifi_password_lock_status(true);
+        wifi_password_set_status("Unable to start WiFi", DECKPRO_COLOR_FG);
+        wifi_password_request_refresh(0, true);
+        return;
+    }
+
+    wifi_connect_in_progress = true;
+    wifi_connect_started_ms = millis();
+    wifi_last_status = WL_IDLE_STATUS;
+    wifi_password_lock_status(true);
+    wifi_password_set_status("Connecting...", DECKPRO_COLOR_FG);
+    if (wifi_connect_timer == NULL) {
+        wifi_connect_timer = lv_timer_create(wifi_connect_timer_cb, 500, NULL);
+    }
+    lv_timer_reset(wifi_connect_timer);
+    lv_timer_resume(wifi_connect_timer);
+    wifi_password_request_refresh(0, true);
+}
+
+static bool wifi_password_handle_long_press_actions(void)
+{
+    if (wifi_password_del_press_ms > 0 &&
+        !wifi_password_del_long_handled &&
+        millis() - wifi_password_del_press_ms >= WIFI_PASSWORD_LONG_PRESS_MS) {
+        wifi_password_clear_text();
+        wifi_password_del_long_handled = true;
+    }
+
+    if (wifi_password_sym_press_ms > 0 &&
+        !wifi_password_sym_long_handled &&
+        millis() - wifi_password_sym_press_ms >= WIFI_PASSWORD_LONG_PRESS_MS) {
+        wifi_password_sym_long_handled = true;
+        wifi_password_cancel();
+        return true;
+    }
+
+    return false;
+}
+
+static bool wifi_password_process_event(char key, int state)
+{
+    if (key == KEYPAD_KEY_NONE) {
+        return false;
+    }
+
+    switch (key) {
+    case KEYPAD_KEY_UP:
+        if (state == KEYPAD_PRESS) {
+            ++wifi_password_shift_hold_count;
+        } else if (wifi_password_shift_hold_count > 0) {
+            --wifi_password_shift_hold_count;
+        }
+        wifi_password_lock_status(false);
+        wifi_password_refresh_status_hint();
+        return false;
+    case KEYPAD_KEY_ALT:
+        if (state == KEYPAD_PRESS) {
+            wifi_password_uppercase = !wifi_password_uppercase;
+            wifi_password_lock_status(false);
+            wifi_password_refresh_status_hint();
+            wifi_password_request_refresh();
+        }
+        return false;
+    case KEYPAD_KEY_DEL:
+        if (state == KEYPAD_PRESS) {
+            wifi_password_del_press_ms = millis();
+            wifi_password_del_long_handled = false;
+        } else {
+            if (!wifi_password_del_long_handled && wifi_password_ta != NULL) {
+                lv_textarea_del_char(wifi_password_ta);
+            }
+            wifi_password_del_press_ms = 0;
+            wifi_password_del_long_handled = false;
+            wifi_password_lock_status(false);
+            wifi_password_refresh_status_hint();
+            wifi_password_request_refresh();
+        }
+        return false;
+    case KEYPAD_KEY_SYM:
+        if (state == KEYPAD_PRESS) {
+            wifi_password_sym_press_ms = millis();
+            wifi_password_sym_long_handled = false;
+        } else {
+            if (!wifi_password_sym_long_handled) {
+                wifi_password_toggle_visibility();
+            }
+            wifi_password_sym_press_ms = 0;
+            wifi_password_sym_long_handled = false;
+            wifi_password_lock_status(false);
+            wifi_password_refresh_status_hint();
+            wifi_password_request_refresh();
+        }
+        return false;
+    case KEYPAD_KEY_ENT:
+        if (state == KEYPAD_PRESS) {
+            wifi_password_submit();
+        }
+        return false;
+    default:
+        if (state != KEYPAD_PRESS) {
+            return false;
+        }
+
+        char mapped = wifi_password_map_key(key);
+        if (mapped != KEYPAD_KEY_NONE) {
+            char txt[2] = {mapped, '\0'};
+            wifi_password_lock_status(false);
+            wifi_password_request_refresh();
+            lv_textarea_add_text(wifi_password_ta, txt);
+            wifi_password_refresh_status_hint();
+        }
+        return false;
     }
 }
 
 static void wifi_password_keypad_handler(void)
 {
-    if (wifi_password_ta == NULL) return;
-
-    char key = '\0';
-    if (!ui_input_get_keypay_val(&key)) {
+    if (wifi_password_ta == NULL) {
         return;
     }
-    ui_input_set_keypay_flag();
 
-    if (key == KEYPAD_KEY_DEL) {
-        lv_textarea_del_char(wifi_password_ta);
-    } else if (key == KEYPAD_KEY_ENT) {
-        lv_event_t e_tmp;
-        e_tmp.code = LV_EVENT_CLICKED;
-        e_tmp.target = wifi_password_ta;
-        wifi_password_connect_event_cb(&e_tmp);
-    } else {
-        char mapped = phone_keypad_to_digit(key);
-        if (mapped != '\0') {
-            char txt[2] = {mapped, '\0'};
-            lv_textarea_add_text(wifi_password_ta, txt);
+    char key = KEYPAD_KEY_NONE;
+    int state = KEYPAD_RELEASE;
+    while (ui_input_get_keypay_event(&key, &state)) {
+        if (wifi_password_process_event(key, state)) {
+            return;
         }
+    }
+
+    if (wifi_password_handle_long_press_actions()) {
+        return;
     }
 }
 
 static void create4_3(lv_obj_t *parent)
 {
-    lv_obj_t *ssid_lab = lv_label_create(parent);
-    lv_obj_set_width(ssid_lab, lv_pct(95));
-    lv_obj_align(ssid_lab, LV_ALIGN_TOP_MID, 0, 10);
-    lv_obj_set_style_text_font(ssid_lab, FONT_BOLD_SIZE_16, LV_PART_MAIN);
-    lv_obj_set_style_text_align(ssid_lab, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+    wifi_ssid_title_lab = lv_label_create(parent);
+    lv_obj_set_width(wifi_ssid_title_lab, lv_pct(95));
+    lv_obj_align(wifi_ssid_title_lab, LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_set_style_text_font(wifi_ssid_title_lab, FONT_BOLD_SIZE_16, LV_PART_MAIN);
+    lv_obj_set_style_text_align(wifi_ssid_title_lab, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
     char ssid_title[40];
     lv_snprintf(ssid_title, sizeof(ssid_title), "SSID: %s", wifi_selected_ssid);
-    lv_label_set_text(ssid_lab, ssid_title);
+    lv_label_set_text(wifi_ssid_title_lab, ssid_title);
 
     wifi_password_ta = lv_textarea_create(parent);
+    lv_textarea_set_password_mode(wifi_password_ta, true);
     lv_textarea_set_one_line(wifi_password_ta, true);
-    lv_obj_set_size(wifi_password_ta, 224, 38);
-    lv_obj_align(wifi_password_ta, LV_ALIGN_TOP_MID, 0, 44);
+    lv_obj_set_size(wifi_password_ta, 224, 42);
+    lv_obj_align(wifi_password_ta, LV_ALIGN_TOP_MID, 0, 48);
     lv_obj_clear_flag(wifi_password_ta, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_style_text_font(wifi_password_ta, &Font_Mono_Bold_20, LV_PART_MAIN);
     lv_obj_set_style_text_align(wifi_password_ta, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
@@ -1607,46 +1945,35 @@ static void create4_3(lv_obj_t *parent)
 
     wifi_connect_status_lab = lv_label_create(parent);
     lv_obj_set_width(wifi_connect_status_lab, lv_pct(96));
-    lv_obj_align(wifi_connect_status_lab, LV_ALIGN_TOP_MID, 0, 88);
+    lv_obj_align(wifi_connect_status_lab, LV_ALIGN_TOP_MID, 0, 102);
     lv_obj_set_style_text_align(wifi_connect_status_lab, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
     lv_obj_set_style_text_font(wifi_connect_status_lab, FONT_BOLD_SIZE_14, LV_PART_MAIN);
+    lv_label_set_long_mode(wifi_connect_status_lab, LV_LABEL_LONG_WRAP);
     lv_label_set_text(wifi_connect_status_lab, "");
 
-    lv_obj_t *connect_btn = lv_btn_create(parent);
-    lv_obj_set_size(connect_btn, 100, 36);
-    lv_obj_align(connect_btn, LV_ALIGN_TOP_LEFT, 20, 120);
-    lv_obj_set_style_bg_color(connect_btn, DECKPRO_COLOR_FG, LV_PART_MAIN);
-    lv_obj_set_style_text_color(connect_btn, DECKPRO_COLOR_BG, LV_PART_MAIN);
-    lv_obj_t *connect_lab = lv_label_create(connect_btn);
-    lv_label_set_text(connect_lab, "Connect");
-    lv_obj_center(connect_lab);
-    lv_obj_add_event_cb(connect_btn, wifi_password_connect_event_cb, LV_EVENT_CLICKED, NULL);
-
-    lv_obj_t *back_btn = lv_btn_create(parent);
-    lv_obj_set_size(back_btn, 100, 36);
-    lv_obj_align(back_btn, LV_ALIGN_TOP_RIGHT, -20, 120);
-    lv_obj_set_style_bg_color(back_btn, DECKPRO_COLOR_FG, LV_PART_MAIN);
-    lv_obj_set_style_text_color(back_btn, DECKPRO_COLOR_BG, LV_PART_MAIN);
-    lv_obj_t *back_lab = lv_label_create(back_btn);
-    lv_label_set_text(back_lab, "Back");
-    lv_obj_center(back_lab);
-    lv_obj_add_event_cb(back_btn, wifi_password_back_event_cb, LV_EVENT_CLICKED, NULL);
-
-    lv_obj_t *hint_lab = lv_label_create(parent);
-    lv_obj_align(hint_lab, LV_ALIGN_BOTTOM_MID, 0, -10);
-    lv_obj_set_style_text_font(hint_lab, FONT_BOLD_MONO_SIZE_14, LV_PART_MAIN);
-    lv_label_set_text(hint_lab, "ENT=Connect  DEL=Delete  Back=Cancel");
+    wifi_password_hint_lab = lv_label_create(parent);
+    lv_obj_set_width(wifi_password_hint_lab, lv_pct(96));
+    lv_obj_align(wifi_password_hint_lab, LV_ALIGN_BOTTOM_MID, 0, -18);
+    lv_obj_set_style_text_align(wifi_password_hint_lab, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+    lv_obj_set_style_text_font(wifi_password_hint_lab, FONT_BOLD_MONO_SIZE_14, LV_PART_MAIN);
+    lv_label_set_long_mode(wifi_password_hint_lab, LV_LABEL_LONG_WRAP);
+    lv_label_set_text(wifi_password_hint_lab, WIFI_PASSWORD_HINT_TEXT);
 }
 
 static void entry4_3(void)
 {
+    wifi_password_reset_state();
     wifi_connect_in_progress = false;
+    wifi_password_set_connected_view(false);
+    wifi_password_apply_visibility();
     wifi_keypad_timer = lv_timer_create([](lv_timer_t *t) {
         (void)t;
         wifi_password_keypad_handler();
-    }, 50, NULL);
+    }, 20, NULL);
 
     wifi_connect_timer = lv_timer_create(wifi_connect_timer_cb, 500, NULL);
+    lv_timer_pause(wifi_connect_timer);
+    wifi_password_refresh_status_hint();
 
     ui_disp_full_refr();
 }
@@ -1654,6 +1981,7 @@ static void entry4_3(void)
 static void exit4_3(void)
 {
     wifi_connect_in_progress = false;
+    wifi_password_reset_state();
     if (wifi_keypad_timer) {
         lv_timer_del(wifi_keypad_timer);
         wifi_keypad_timer = NULL;
@@ -1667,8 +1995,11 @@ static void exit4_3(void)
 
 static void destroy4_3(void)
 {
+    wifi_password_reset_state();
+    wifi_ssid_title_lab = NULL;
     wifi_password_ta = NULL;
     wifi_connect_status_lab = NULL;
+    wifi_password_hint_lab = NULL;
 }
 
 static scr_lifecycle_t screen4_3 = {
@@ -3402,7 +3733,6 @@ static lv_timer_t *menu_timer = NULL;
 
 static void indev_get_gesture_dir(lv_timer_t *t)
 {
-
     lv_indev_t * touch_indev = lv_indev_get_next(NULL);
     lv_dir_t dir = lv_indev_get_gesture_dir(touch_indev);
     if(dir == LV_DIR_RIGHT) { // right
@@ -3492,7 +3822,7 @@ static void low_battery_popup_update(uint32_t remain_sec)
         return;
     }
 
-    lv_label_set_text_fmt(low_battery_countdown_label, "%lus 后自动关机", remain_sec);
+    lv_label_set_text_fmt(low_battery_countdown_label, "Auto shutdown in %lus", remain_sec);
 }
 
 static void low_battery_popup_create(void)
@@ -3527,7 +3857,7 @@ static void low_battery_popup_create(void)
     lv_obj_set_style_text_color(msg_label, DECKPRO_COLOR_FG, LV_PART_MAIN);
     lv_obj_set_style_text_align(msg_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
     lv_label_set_long_mode(msg_label, LV_LABEL_LONG_WRAP);
-    lv_label_set_text(msg_label, "电量过低，请充电");
+    lv_label_set_text(msg_label, "Battery too low.\nPlease charge.");
     lv_obj_align(msg_label, LV_ALIGN_TOP_MID, 0, 16);
 
     low_battery_countdown_label = lv_label_create(panel);

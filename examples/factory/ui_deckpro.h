@@ -41,6 +41,7 @@ extern "C" {
 #define DECKPRO_COLOR_FG        lv_color_black()
 #define UI_SLIDING_DISTANCE     40
 #define UI_WIFI_SCAN_ITEM_MAX   13
+#define UI_WIFI_SSID_MAX_LEN    33
 #define UI_WIFI_CONNECT_TIMEOUT_MS   30000
 
 /*********************************************************************************
@@ -124,7 +125,7 @@ typedef struct _ui_pcm5102 {
 
 
 typedef struct {
-    char name[16];
+    char name[UI_WIFI_SSID_MAX_LEN];
     int rssi;
 }ui_wifi_scan_info_t;
 /*********************************************************************************

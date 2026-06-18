@@ -237,26 +237,42 @@ int is_chinese_utf8(const char *str) {
 
 void ui_wifi_get_scan_info(ui_wifi_scan_info_t *list, int list_len)
 {
+    if(list == NULL || list_len <= 0)
+        return;
+
     int n = WiFi.scanNetworks();
-    if(n > list_len)
-        n = list_len;
+    if(n <= 0) {
+        memset(list, 0, (sizeof(*list) * list_len));
+        return;
+    }
 
     memset(list, 0, (sizeof(*list) * list_len));
-    for(int i = 0; i < n; i++)
+    int out = 0;
+    for(int i = 0; i < n && out < list_len; i++)
     {
-        const char *str = WiFi.SSID(i).c_str();
+        String ssid = WiFi.SSID(i);
+        if(ssid.length() == 0)
+            continue;
+
+        const char *str = ssid.c_str();
         if(is_chinese_utf8(str))
             continue;
-        strncpy(list[i].name, WiFi.SSID(i).c_str(), 16);
-        list[i].rssi = WiFi.RSSI(i);
+
+        strncpy(list[out].name, str, sizeof(list[out].name) - 1);
+        list[out].name[sizeof(list[out].name) - 1] = '\0';
+        list[out].rssi = WiFi.RSSI(i);
+        out++;
     }
 }
 
 bool ui_wifi_connect(const char *ssid, const char *password)
 {
-    if (ssid == NULL || password == NULL) {
+    if (ssid == NULL || password == NULL || ssid[0] == '\0') {
         return false;
     }
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect(false, false);
+    delay(50);
     WiFi.begin(ssid, password);
     return true;
 }
@@ -356,6 +372,11 @@ int ui_input_get_touch_coord(int *x, int *y)
 int ui_input_get_keypay_val(char *v)
 {
     return keypad_get_val(v);
+}
+
+int ui_input_get_keypay_event(char *v, int *state)
+{
+    return keypad_get_event(v, state);
 }
 
 void ui_input_set_keypay_flag(void)

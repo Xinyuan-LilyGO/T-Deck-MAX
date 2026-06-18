@@ -53,6 +53,7 @@ typedef void (*keypad_cb)(int state, char val);
 
 bool keypad_init(int address);
 int keypad_get_val(char *c);
+int keypad_get_event(char *c, int *state);
 void keypad_loop(void);
 void keypad_regetser_cb(keypad_cb cb);
 void keypad_set_flag(void);

@@ -160,6 +160,7 @@ const char * ui_battert_27220_get_percent_level(void);
 // [ screen 7 ] --- Input
 int ui_input_get_touch_coord(int *x, int *y);
 int ui_input_get_keypay_val(char *v);
+int ui_input_get_keypay_event(char *v, int *state);
 void ui_input_set_keypay_flag(void);
 int ui_other_get_gyro(float *gyro_x, float *gyro_y, float *gyro_z);
 

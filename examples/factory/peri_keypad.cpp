@@ -17,11 +17,50 @@ const char keymap[KEYPAD_ROWS][KEYPAD_COLS] = {
     {KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_NONE, KEYPAD_KEY_UP, '0', KEYPAD_KEY_SPACE, KEYPAD_KEY_SYM, KEYPAD_KEY_UP},
 };
 
+#define KEYPAD_EVENT_QUEUE_LEN 16
+
+typedef struct {
+    char value;
+    int state;
+} keypad_event_t;
+
 Adafruit_TCA8418 keypad; 
 keypad_cb keypad_listener = NULL;
 char keypad_curr_val = ' ';
 int keypad_state = KEYPAD_RELEASE;
 bool keypad_update = false;
+static keypad_event_t keypad_event_queue[KEYPAD_EVENT_QUEUE_LEN];
+static uint8_t keypad_event_head = 0;
+static uint8_t keypad_event_tail = 0;
+
+static void keypad_push_event(char value, int state)
+{
+    uint8_t next_tail = (uint8_t)((keypad_event_tail + 1U) % KEYPAD_EVENT_QUEUE_LEN);
+    if (next_tail == keypad_event_head) {
+        keypad_event_head = (uint8_t)((keypad_event_head + 1U) % KEYPAD_EVENT_QUEUE_LEN);
+    }
+
+    keypad_event_queue[keypad_event_tail].value = value;
+    keypad_event_queue[keypad_event_tail].state = state;
+    keypad_event_tail = next_tail;
+}
+
+static bool keypad_pop_event(char *value, int *state)
+{
+    if (keypad_event_head == keypad_event_tail) {
+        return false;
+    }
+
+    if (value) {
+        *value = keypad_event_queue[keypad_event_head].value;
+    }
+    if (state) {
+        *state = keypad_event_queue[keypad_event_head].state;
+    }
+
+    keypad_event_head = (uint8_t)((keypad_event_head + 1U) % KEYPAD_EVENT_QUEUE_LEN);
+    return true;
+}
 
 bool keypad_init(int address)
 {
@@ -49,10 +88,42 @@ bool keypad_init(int address)
 
 int keypad_get_val(char *c)
 {
-    if(c){
-        *c = keypad_curr_val;
+    char value = KEYPAD_KEY_NONE;
+    int state = KEYPAD_RELEASE;
+
+    while (keypad_pop_event(&value, &state)) {
+        if (state == KEYPAD_PRESS) {
+            if (c) {
+                *c = value;
+            }
+            keypad_curr_val = value;
+            keypad_state = state;
+            return true;
+        }
     }
-    return keypad_update;
+
+    return false;
+}
+
+int keypad_get_event(char *c, int *state)
+{
+    char value = KEYPAD_KEY_NONE;
+    int event_state = KEYPAD_RELEASE;
+
+    if (!keypad_pop_event(&value, &event_state)) {
+        return false;
+    }
+
+    if (c) {
+        *c = value;
+    }
+    if (state) {
+        *state = event_state;
+    }
+
+    keypad_curr_val = value;
+    keypad_state = event_state;
+    return true;
 } 
 
 void keypad_set_flag(void)
@@ -83,8 +154,12 @@ void keypad_loop(void)
     char c = -1;
     int state = -1;
     int row, col;
-    int k = keypad.getEvent();
     int v = keypad.available();
+    if (v <= 0) {
+        return;
+    }
+
+    int k = keypad.getEvent();
 
     if(k >=KEYPAD_RELEASE_VAL_MIN && k <= KEYPAD_RELEASE_VAL_MAX){ // release event
         k = k - KEYPAD_RELEASE_VAL_MIN;
@@ -110,6 +185,7 @@ void keypad_loop(void)
         keypad_curr_val = c;
         keypad_state = state;
         keypad_update = true;
+        keypad_push_event(c, state);
     }
 }
 

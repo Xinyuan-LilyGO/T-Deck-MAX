@@ -53,7 +53,7 @@ How to download the firmware? - [click me](./firmware/)
 |       GPS        |            MIA-M10Q            |
 |     Display      |      GDEQ031T10 (320x240)      |
 |    4G-Module     |             A7682E             |
-| Battery Capacity |          3.7V-1500mAh          |
+| Battery Capacity |          3.7V-1400mAh          |
 |   Battery Chip   | SY6970 (0x6A), BQ27220 (0x55) |
 |      Audio       |         ES8311 (0x18)          |
 |      Touch       |         CST3530 (0x1A)          |

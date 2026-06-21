@@ -1,0 +1,26 @@
+name: Sync labels
+
+# Reconciles the repository's labels to match .github/labels.yml.
+# Runs when the label config changes on master, or on demand.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - .github/labels.yml
+      - .github/workflows/labels.yml
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EndBug/label-sync@v2
+        with:
+          config-file: .github/labels.yml
+          # Keep labels that aren't in the config (e.g. GitHub defaults, "stale").
+          delete-other-labels: false

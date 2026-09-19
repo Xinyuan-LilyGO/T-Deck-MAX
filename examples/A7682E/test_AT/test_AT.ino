@@ -1,17 +1,68 @@
 
 
 #include "Arduino.h"
+#include <GxEPD2_BW.h>
 #include <TDeckMaxBoard.h>
 #include "ExtensionIOXL9555.hpp"
 
 ExtensionIOXL9555 io;
 bool reply = false;
 
+GxEPD2_BW<GxEPD2_310_GDEQ031T10, GxEPD2_310_GDEQ031T10::HEIGHT> display(
+    GxEPD2_310_GDEQ031T10(BOARD_EPD_CS, BOARD_EPD_DC, BOARD_EPD_RST, BOARD_EPD_BUSY));
+
+void drawCenteredText(const char *text, int16_t y, uint8_t size)
+{
+    int16_t x1;
+    int16_t y1;
+    uint16_t width;
+    uint16_t height;
+
+    display.setTextSize(size);
+    display.getTextBounds(text, 0, y, &x1, &y1, &width, &height);
+    display.setCursor((display.width() - width) / 2 - x1, y);
+    display.print(text);
+}
+
+void showStartupScreen()
+{
+    // LoRa, SD and EPD share one SPI bus; keep the unused devices deselected.
+    pinMode(BOARD_LORA_CS, OUTPUT);
+    digitalWrite(BOARD_LORA_CS, HIGH);
+    pinMode(BOARD_LORA_RST, OUTPUT);
+    digitalWrite(BOARD_LORA_RST, HIGH);
+    pinMode(BOARD_SD_CS, OUTPUT);
+    digitalWrite(BOARD_SD_CS, HIGH);
+    pinMode(BOARD_EPD_CS, OUTPUT);
+    digitalWrite(BOARD_EPD_CS, HIGH);
+
+    pinMode(BOARD_EPD_BL, OUTPUT);
+    analogWrite(BOARD_EPD_BL, 0);
+
+    SPI.begin(BOARD_EPD_SCK, -1, BOARD_EPD_MOSI, BOARD_EPD_CS);
+    display.init(115200, true, 2, false);
+    display.setRotation(0);
+    display.setTextColor(GxEPD_BLACK);
+    display.setTextWrap(false);
+    display.setFont(nullptr);
+    display.setFullWindow();
+    display.firstPage();
+    do {
+        display.fillScreen(GxEPD_WHITE);
+        display.drawRect(12, 12, display.width() - 24, display.height() - 24, GxEPD_BLACK);
+        display.drawRect(16, 16, display.width() - 32, display.height() - 32, GxEPD_BLACK);
+        drawCenteredText("A7682E", 112, 4);
+        drawCenteredText("AT TEST", 160, 3);
+        drawCenteredText("DEVICE STARTED", 214, 2);
+    } while (display.nextPage());
+    display.powerOff();
+}
+
 void setup(void)
 {
-    
     SerialMon.begin(115200);
     SerialAT.begin(115200, SERIAL_8N1, BOARD_A7682E_TXD, BOARD_A7682E_RXD);
+    // showStartupScreen();
 
     // XL9555 Init
     if (!io.init(Wire, BOARD_I2C_SDA, BOARD_I2C_SCL, XL9555_SLAVE_ADDRESS0)) {

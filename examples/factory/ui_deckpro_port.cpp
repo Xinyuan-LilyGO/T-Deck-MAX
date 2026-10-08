@@ -557,7 +557,7 @@ void ui_system_sleep(void)
 
         BOARD_TOUCH_INT,
 
-        BOARD_GYROSCOPDE_INT,
+        BOARD_GYROSCOPE_INT,
 
         BOARD_EPD_BL,
         BOARD_EPD_DC,

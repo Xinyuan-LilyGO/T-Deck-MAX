@@ -91,7 +91,7 @@ void BHI260AP_get_val(int val_type, float *x, float *y, float *z)
 bool BHI260AP_init(void)
 {
     // Set the reset pin and interrupt pin, if any
-    bhy.setPins(BOARD_GYROSCOPDE_RST, BOARD_GYROSCOPDE_INT);
+    bhy.setPins(BOARD_GYROSCOPE_RST, BOARD_GYROSCOPE_INT);
 
     if (!bhy.init(Wire, BOARD_I2C_SDA, BOARD_I2C_SCL, BHI260AP_SLAVE_ADDRESS_L)) {
         Serial.print("Failed to init BHI260AP - ");

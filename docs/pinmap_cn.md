@@ -81,10 +81,10 @@ I2C 地址：`0x28`。
 
 | 功能 | 当前宏/建议名 | GPIO/映射 | 来源 | 备注 |
 | --- | --- | --- | --- | --- |
-| I2C SDA | `BOARD_GYROSCOPDE_SDA` | GPIO13 | 原理图 Page 4 | 共用主 I2C |
-| I2C SCL | `BOARD_GYROSCOPDE_SCL` | GPIO14 | 原理图 Page 4 | 共用主 I2C |
-| INT | `BOARD_GYROSCOPDE_INT` | GPIO21 | 原理图 Page 4 | 原理图网络名 `HIRQ` |
-| RST | `BOARD_GYROSCOPDE_RST` | `-1` | 原理图 Page 4 | 当前未接复位脚 |
+| I2C SDA | `BOARD_GYROSCOPE_SDA` | GPIO13 | 原理图 Page 4 | 共用主 I2C |
+| I2C SCL | `BOARD_GYROSCOPE_SCL` | GPIO14 | 原理图 Page 4 | 共用主 I2C |
+| INT | `BOARD_GYROSCOPE_INT` | GPIO21 | 原理图 Page 4 | 原理图网络名 `HIRQ` |
+| RST | `BOARD_GYROSCOPE_RST` | `-1` | 原理图 Page 4 | 当前未接复位脚 |
 | 电源使能 | `BOARD_XL9555_03_1V8_EN` | `XL9555 P03` | 原理图 Page 4/7 | `HIGH` 上电 |
 
 ## 7. 马达 DRV2605

@@ -18,7 +18,7 @@
 #define BOARD_I2C_ADDR_ES8311      0x18     // ES8311   audio codec
 #define BOARD_I2C_ADDR_TOUCH       0x1A     // CST328   touch controller
 #define BOARD_I2C_ADDR_XL9555      0x20     // XL9555   IO expander
-#define BOARD_I2C_ADDR_GYROSCOPDE  0x28     // BHI260AP gyroscope
+#define BOARD_I2C_ADDR_GYROSCOPE  0x28     // BHI260AP gyroscope
 #define BOARD_I2C_ADDR_KEYBOARD    0x34     // TCA8418  keyboard matrix controller
 #define BOARD_I2C_ADDR_BQ27220     0x55     // BQ27220  fuel gauge
 #define BOARD_I2C_ADDR_MOTOR       0x5A     // DRV2605  vibration motor driver
@@ -70,10 +70,10 @@
 #define BOARD_TOUCH_RST XL9555_GPIO(BOARD_XL9555_07_TOUCH_RST)
 
 // Gyroscope
-#define BOARD_GYROSCOPDE_SCL BOARD_I2C_SCL
-#define BOARD_GYROSCOPDE_SDA BOARD_I2C_SDA
-#define BOARD_GYROSCOPDE_INT 21
-#define BOARD_GYROSCOPDE_RST -1
+#define BOARD_GYROSCOPE_SCL BOARD_I2C_SCL
+#define BOARD_GYROSCOPE_SDA BOARD_I2C_SDA
+#define BOARD_GYROSCOPE_INT 21
+#define BOARD_GYROSCOPE_RST -1
 
 // Motor
 #define BOARD_MOTOR_SCL BOARD_I2C_SCL

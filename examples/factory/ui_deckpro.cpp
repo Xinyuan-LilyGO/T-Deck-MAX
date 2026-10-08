@@ -1111,7 +1111,7 @@ static lv_obj_t * scr3_create_label(lv_obj_t *parent)
     return label;
 }
 
-static void scr3_GPS_updata(void)
+static void scr3_GPS_update(void)
 {
     double lat      = 0; // Latitude
     double lon      = 0; // Longitude
@@ -1139,10 +1139,10 @@ static void scr3_GPS_updata(void)
 
     char buf[32];
 
-    lv_snprintf(buf, 16, "%0.1f", lat);
+    lv_snprintf(buf, 16, "%0.5f", lat);
     gps_set_line(label_list[0], "Latitude:", buf);
 
-    lv_snprintf(buf, 16, "%0.1f", lon);
+    lv_snprintf(buf, 16, "%0.5f", lon);
     gps_set_line(label_list[1], "Longitude:", buf);
 
     lv_snprintf(buf, 16, "%0.3fkmph", speed);
@@ -1166,7 +1166,7 @@ static void scr3_GPS_updata(void)
 
 static void GPS_loop_timer_event(lv_timer_t * t)
 {
-    scr3_GPS_updata();
+    scr3_GPS_update();
 }
 
 static void scr3_btn_event_cb(lv_event_t * e)
@@ -1210,7 +1210,7 @@ static void create3(lv_obj_t *parent)
 }
 static void entry3(void) 
 {
-    scr3_GPS_updata();
+    scr3_GPS_update();
 
     ui_gps_task_resume();
 
@@ -2316,7 +2316,7 @@ static lv_obj_t * scr6_1_create_label(lv_obj_t *parent)
     return label;
 }
 
-static void scr6_1_battert_updata(void)
+static void scr6_1_battert_update(void)
 {
     char buf[line_max];
 
@@ -2350,9 +2350,9 @@ static void scr6_1_battert_updata(void)
     battery_set_line(label_list[9], " ", buf);
 }
 
-static void batt_6_1_updata_timer_event(lv_timer_t *t) 
+static void batt_6_1_update_timer_event(lv_timer_t *t) 
 {
-    scr6_1_battert_updata();
+    scr6_1_battert_update();
 }
 
 static void scr6_1_btn_event_cb(lv_event_t * e)
@@ -2386,9 +2386,9 @@ static void create6_1(lv_obj_t *parent)
 }
 static void entry6_1(void) 
 {
-    scr6_1_battert_updata();
+    scr6_1_battert_update();
     ui_disp_full_refr();
-    batt_6_1_timer = lv_timer_create(batt_6_1_updata_timer_event, 5000, NULL);
+    batt_6_1_timer = lv_timer_create(batt_6_1_update_timer_event, 5000, NULL);
 }
 static void exit6_1(void) {
     if(batt_6_1_timer) {
@@ -2426,7 +2426,7 @@ static lv_obj_t * scr6_2_create_label(lv_obj_t *parent)
     return label;
 }
 
-static void scr6_2_battert_updata(void)
+static void scr6_2_battert_update(void)
 {
     char buf[line_max];
 
@@ -2464,9 +2464,9 @@ static void scr6_2_battert_updata(void)
     battery_set_line(label_list[9], "CapHealth:", buf);
 }
 
-static void batt_6_2_updata_timer_event(lv_timer_t *t) 
+static void batt_6_2_update_timer_event(lv_timer_t *t) 
 {
-    scr6_2_battert_updata();
+    scr6_2_battert_update();
 }
 
 static void scr6_2_btn_event_cb(lv_event_t * e)
@@ -2501,9 +2501,9 @@ static void create6_2(lv_obj_t *parent)
 
 static void entry6_2(void) 
 {
-    scr6_2_battert_updata();
+    scr6_2_battert_update();
     ui_disp_full_refr();
-    batt_6_2_timer = lv_timer_create(batt_6_2_updata_timer_event, 5000, NULL);
+    batt_6_2_timer = lv_timer_create(batt_6_2_update_timer_event, 5000, NULL);
 }
 static void exit6_2(void) {
     if(batt_6_2_timer) {

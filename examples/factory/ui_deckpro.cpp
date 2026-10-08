@@ -127,7 +127,7 @@ static int page_curr = 0;
 static struct menu_btn menu_btn_list[] = 
 {
     {SCREEN1_ID,  &img_lora,    "Lora",     23,     13},  // Page one
-    {SCREEN2_ID,  &img_setting, "Setting",  95,     13},
+    {SCREEN2_ID,  &img_setting, "Settings",  95,     13},
     {SCREEN3_ID,  &img_GPS,     "GPS",      167,    13},
     {SCREEN4_ID,  &img_wifi,    "Wifi",     23,     101},
     {SCREEN5_ID,  &img_test,    "Test",     95,     101},

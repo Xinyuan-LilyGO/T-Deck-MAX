@@ -20,6 +20,7 @@
 
 volatile int default_language = DEFAULT_LANGUAGE_EN;
 volatile bool default_keypad_light = false;
+volatile bool default_display_light = false;
 volatile bool default_motor_status = false;
 volatile bool default_gps_status = true;
 volatile bool default_lora_status = true;
@@ -107,12 +108,17 @@ void ui_setting_set_language(int language)
 }
 void ui_setting_set_keypad_light(bool on)
 {
-    // digitalWrite(BOARD_KEYBOARD_LED, on);
-    // default_keypad_light = on;
+    analogWrite(BOARD_KEYBOARD_LED, on*255);
+    default_keypad_light = on;
+}
+void ui_setting_set_display_light(bool on)
+{
+    analogWrite(BOARD_EPD_BL, on*255);
+    default_display_light = on;
 }
 void ui_setting_set_motor_status(bool on)
 {
-    // digitalWrite(BOARD_MOTOR_PIN, on);
+    // digitalWrite(BOARD_MOTOR_EN, on);
     // default_motor_status = on;
 }
 void ui_setting_set_gps_status(bool on)
@@ -144,6 +150,10 @@ void ui_setting_set_a7682_status(bool on)
 bool ui_setting_get_keypad_light(void)
 {
     return default_keypad_light;
+}
+bool ui_setting_get_display_light(void)
+{
+    return default_display_light;
 }
 bool ui_setting_get_motor_status(void)
 {

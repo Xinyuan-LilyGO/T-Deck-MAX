@@ -30,6 +30,7 @@ enum {
 #define LORA_MODE_RECV 1
 
 bool lora_init(void);
+bool lora_is_available(void);
 void lora_set_mode(int mode);
 int lora_get_mode(void);
 void lora_receive_loop(void);

@@ -62,6 +62,10 @@ void ui_lora_set_power(float po) { lora_default_power = po; }
 
 void ui_lora_param_set(void)
 {
+    if (!lora_is_available()) {
+        return;
+    }
+
 // LOW --- external antenna 
 // HIGH --- internal antenna (default)
     if(lora_default_ante_dir == 0) {
@@ -515,7 +519,9 @@ void ui_system_sleep(void)
     // touch.sleep();
     hyn_sleep();
 
-    lora_sleep();
+    if (lora_is_available()) {
+        lora_sleep();
+    }
 
     SerialMon.end();
     SerialAT.end();

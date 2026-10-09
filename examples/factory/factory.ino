@@ -29,7 +29,7 @@
 #define FACTORY_BATTERY_DESIGN_CAPACITY_MAH 1400
 
 TinyGsm modem(SerialAT);
-TaskHandle_t a7682_handle;
+TaskHandle_t a7682_handle = nullptr;
 
 XPowersPPM PPM;
 BQ27220 bq27220;
@@ -956,45 +956,79 @@ static void a7682_task(void *param)
     }
 }
 
+static void A7682E_power_off(void)
+{
+    // PWRKEY is routed through XL9555 P10. Keep it inactive before removing
+    // the modem supply rail so an unpopulated module cannot be back-powered.
+    xl9555_io.digitalWrite(BOARD_XL9555_10_PWRKEY_EN, LOW);
+    xl9555_io.digitalWrite(BOARD_XL9555_00_6609_EN, LOW);
+}
+
+static void A7682E_power_on(void)
+{
+    xl9555_io.digitalWrite(BOARD_XL9555_10_PWRKEY_EN, LOW);
+    xl9555_io.digitalWrite(BOARD_XL9555_00_6609_EN, HIGH);
+
+    // Allow the SGM6609 output and the modem internal rails to settle before
+    // touching PWRKEY. This is also the cold-start delay used by the modem
+    // examples in this repository.
+    delay(1500);
+}
+
+static bool A7682E_wait_for_ready(void)
+{
+    // A modem may already be running after a warm reset. Avoid toggling its
+    // PWRKEY unless it does not answer first.
+    if (modem.testAT(1500)) {
+        return true;
+    }
+
+    Serial.println("[A7682E] Pulsing PWRKEY...");
+    xl9555_io.digitalWrite(BOARD_XL9555_10_PWRKEY_EN, LOW);
+    delay(100);
+    xl9555_io.digitalWrite(BOARD_XL9555_10_PWRKEY_EN, HIGH);
+    delay(1100);
+    xl9555_io.digitalWrite(BOARD_XL9555_10_PWRKEY_EN, LOW);
+
+    // Keep probing for a bounded amount of time. An absent modem must be a
+    // normal failed peripheral, not a reason to restart the whole product.
+    for (uint8_t retry = 0; retry < 5; ++retry) {
+        if (modem.testAT(1000)) {
+            return true;
+        }
+        Serial.print('.');
+        delay(200);
+    }
+    Serial.println();
+    return false;
+}
+
+static void A7682E_cleanup(void)
+{
+    if (phone_cmd_queue != NULL) {
+        vQueueDelete(phone_cmd_queue);
+        phone_cmd_queue = NULL;
+    }
+    SerialAT.end();
+    A7682E_power_off();
+    phone_snapshot_reset(false);
+}
+
 static bool A7682E_init(void)
 {
     Serial.println("Place your board outside to catch satelite signal");
     phone_snapshot_reset(false);
 
-    // Set module baud rate and UART pins
+    // Set module baud rate and UART pins before applying the modem power
+    // sequence so an already-running module can be detected safely.
     SerialAT.begin(115200, SERIAL_8N1, BOARD_A7682E_TXD, BOARD_A7682E_RXD);
 
     Serial.println("Start modem...");
+    A7682E_power_on();
 
-    // power on
-    digitalWrite(BOARD_A7682E_PWRKEY, LOW);
-    delay(10);
-    digitalWrite(BOARD_A7682E_PWRKEY, HIGH);
-    delay(50);
-    digitalWrite(BOARD_A7682E_PWRKEY, LOW);
-    delay(10);
-
-    int retry_cnt = 5;
-    int retry = 0;
-    while (!modem.testAT(1000)) {
-        Serial.println(".");
-        if (retry++ > retry_cnt) {
-            digitalWrite(BOARD_A7682E_PWRKEY, LOW);
-            delay(100);
-            digitalWrite(BOARD_A7682E_PWRKEY, HIGH);
-            delay(1000);
-            digitalWrite(BOARD_A7682E_PWRKEY, LOW);
-
-            Serial.println("[A7682E] Init Fail");
-            break;
-        }
-    }
-    
-    Serial.println();
-    delay(200);
-
-    if (retry >= retry_cnt) {
-        phone_snapshot_reset(false);
+    if (!A7682E_wait_for_ready()) {
+        Serial.println("[A7682E] Init Fail");
+        A7682E_cleanup();
         return false;
     }
 
@@ -1004,16 +1038,15 @@ static bool A7682E_init(void)
     phone_cmd_queue = xQueueCreate(6, sizeof(phone_cmd_t));
     if (phone_cmd_queue == NULL) {
         Serial.println("[A7682E] Command queue init failed");
-        phone_snapshot_reset(false);
+        A7682E_cleanup();
         return false;
     }
 
     phone_snapshot_reset(true);
     if (xTaskCreate(a7682_task, "a7682_handle", 1024 * 4, NULL, A7682E_PRIORITY, &a7682_handle) != pdPASS) {
         Serial.println("[A7682E] Runtime task init failed");
-        vQueueDelete(phone_cmd_queue);
-        phone_cmd_queue = NULL;
-        phone_snapshot_reset(false);
+        a7682_handle = nullptr;
+        A7682E_cleanup();
         return false;
     }
 
@@ -1094,8 +1127,30 @@ void setup()
         };
         for (auto pin : expands) {
             xl9555_io.pinMode(pin, OUTPUT);
-            xl9555_io.digitalWrite(pin, HIGH);
             delay(1);
+        }
+
+        const uint8_t expands_low[] = {
+            BOARD_XL9555_00_6609_EN,
+            BOARD_XL9555_01_LORA_EN,
+            BOARD_XL9555_02_GPS_EN,
+            BOARD_XL9555_03_1V8_EN,
+            BOARD_XL9555_05_MOTOR_EN,
+            BOARD_XL9555_06_AMPLIFIER,
+            BOARD_XL9555_10_PWRKEY_EN,
+            BOARD_XL9555_12_AUDIO_SEL,
+        };
+        for (auto pin : expands_low) {
+            xl9555_io.digitalWrite(pin, LOW);
+        }
+
+        const uint8_t expands_high[] = {
+            BOARD_XL9555_04_LORA_SEL,
+            BOARD_XL9555_07_TOUCH_RST,
+            BOARD_XL9555_11_KEY_RST,
+        };
+        for (auto pin : expands_high) {
+            xl9555_io.digitalWrite(pin, HIGH);
         }
         // LOW --- external antenna 
         // HIGH --- internal antenna (default)
@@ -1129,6 +1184,8 @@ void setup()
 
     // init motor
     Serial.printf(" -------------------------- DRV2605 -------------------------- \n");
+    xl9555_io.digitalWrite(BOARD_XL9555_05_MOTOR_EN, HIGH);
+    delay(10);
     if(!motor_drv.begin()) {
         // while (1) {
             Serial.println("Failed to find DRV2605 - Motor drive");
@@ -1177,13 +1234,25 @@ void setup()
     // init peripheral
     // touch.setPins(-1, BOARD_TOUCH_INT); // touch_rst connect the IO07 of the chip XL9555
     peri_init_st[E_PERI_INK_SCREEN] = ink_screen_init();
+    xl9555_io.digitalWrite(BOARD_XL9555_01_LORA_EN, HIGH);
+    delay(10);
     peri_init_st[E_PERI_LORA]       = lora_init();
+    if (!peri_init_st[E_PERI_LORA]) {
+        xl9555_io.digitalWrite(BOARD_XL9555_01_LORA_EN, LOW);
+        // RadioLib may terminate the shared SPI interface when the chip is
+        // not found. Restore the board-specific pins for SD and the display.
+        SPI.begin(BOARD_SPI_SCK, BOARD_SPI_MISO, BOARD_SPI_MOSI);
+    }
     // peri_init_st[E_PERI_TOUCH]      = touch.begin(Wire, BOARD_I2C_ADDR_TOUCH, BOARD_TOUCH_SDA, BOARD_TOUCH_SCL);
     peri_init_st[E_PERI_KYEPAD]     = keypad_init(BOARD_I2C_ADDR_KEYBOARD);
     peri_init_st[E_PERI_BQ25896]    = bq25896_init();
     peri_init_st[E_PERI_BQ27220]    = bq27220_init();
     peri_init_st[E_PERI_SD]         = sd_care_init();
+    xl9555_io.digitalWrite(BOARD_XL9555_02_GPS_EN, HIGH);
+    delay(10);
     peri_init_st[E_PERI_GPS]        = gps_init();
+    xl9555_io.digitalWrite(BOARD_XL9555_03_1V8_EN, HIGH);
+    delay(10);
     peri_init_st[E_PERI_BHI260AP]   = BHI260AP_init();
     peri_init_st[E_PERI_A7682E]     = A7682E_init();
 

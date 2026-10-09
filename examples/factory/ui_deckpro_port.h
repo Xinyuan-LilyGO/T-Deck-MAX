@@ -176,8 +176,16 @@ void ui_phone_set_debug_passthrough(bool enabled);
 void ui_shutdown_on(void);
 
 // [ screen 10 ] --- A7682E
-bool ui_pcm5102_cb(const char *at_cmd);void ui_pcm5102_stop(void);
+bool ui_pcm5102_cb(const char *at_cmd);
 void ui_pcm5102_stop(void);
+
+// [ screen 13/14 ] --- ES8311 microphone and speaker tests
+bool ui_audio_test_mic_start(void);
+bool ui_audio_test_mic_read(int *level_percent, int *level_db);
+bool ui_audio_test_speaker_start(void);
+bool ui_audio_test_speaker_update(void);
+int ui_audio_test_speaker_frequency(void);
+void ui_audio_test_stop(void);
 
 // [ screen 12 ] --- Motor
 void ui_motor_loop(int i);

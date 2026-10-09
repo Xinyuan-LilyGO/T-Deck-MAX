@@ -1213,9 +1213,10 @@ void setup()
         //  HIGH : the headphones and speakers output the sound from A7682E.
         //  LOW :  the headphones and speakers output the sound from ES8311.
         ((ExtensionIOXL9555 *)user_data)->digitalWrite(BOARD_XL9555_12_AUDIO_SEL, LOW);
-        ((ExtensionIOXL9555 *)user_data)->digitalWrite(BOARD_XL9555_06_AMPLIFIER, HIGH);
+        ((ExtensionIOXL9555 *)user_data)->digitalWrite(BOARD_XL9555_06_AMPLIFIER, enable ? HIGH : LOW);
     }, &xl9555_io);
     codec.setVolume(50); // range: [0, 100]
+    peri_init_st[E_PERI_MIC] = peri_init_st[E_PERI_ES8311];
     // codec.playWAV((uint8_t*)wav_hex, wav_hex_len);
 
     // Serial.printf(" ------------- SPIFFS ------------- \n");

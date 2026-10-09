@@ -72,6 +72,8 @@ enum {
     SCREEN10_ID,
     SCREEN11_ID,
     SCREEN12_ID,
+    SCREEN13_ID,
+    SCREEN14_ID,
 };
 
 typedef void (*ui_indev_read_cb)(int);
@@ -121,6 +123,7 @@ typedef struct _ui_pcm5102 {
     lv_obj_t *obj;
     lv_obj_t *st;
     bool (*cb)(const char *at_cmd);
+    int detail_screen_id;
 } ui_pcm5102_handle;
 
 

@@ -2092,7 +2092,6 @@ static void test_item_create(int curr_apge)
         lv_obj_set_style_border_width(h->obj, 1, LV_PART_MAIN | LV_STATE_PRESSED);
         lv_obj_set_style_outline_width(h->obj, 3, LV_PART_MAIN | LV_STATE_PRESSED);
         lv_obj_set_style_radius(h->obj, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-        // lv_obj_add_event_cb(h->obj, test_scr_event, LV_EVENT_CLICKED, (void *)h);
     }
 }
 
@@ -3438,7 +3437,7 @@ static scr_lifecycle_t screen9 = {
     .destroy = destroy9,
 };
 #endif
-//************************************[ screen 10 ]***************************************** pcm5102
+//************************************[ screen 10 ]***************************************** Music
 #if 1
 static lv_obj_t *pcm5102_list;
 static lv_obj_t *pcm5102_page;
@@ -3448,7 +3447,9 @@ static int pcm5102_curr_page = 0;
 
 static ui_pcm5102_handle pcm5102_handle_list[] = 
 {
-    {"ES8311 play Wav", NULL, NULL, ui_pcm5102_cb},
+    {"ES8311 play Wav", NULL, NULL, ui_pcm5102_cb, 0},
+    {"Microphone test", NULL, NULL, NULL, SCREEN13_ID},
+    {"Speaker test", NULL, NULL, NULL, SCREEN14_ID},
 };
 
 static void pcm5102_item_create(int curr_apge);
@@ -3459,8 +3460,11 @@ static void pcm5102_scr_event(lv_event_t *e)
     ui_pcm5102_handle *h = (ui_pcm5102_handle *)e->user_data;
 
     if(e->code == LV_EVENT_CLICKED) {
-        if(h->cb)
+        if(h->detail_screen_id != 0) {
+            scr_mgr_push(h->detail_screen_id, false);
+        } else if(h->cb) {
             h->cb(h->name);
+        }
     }
 }
 
@@ -3610,7 +3614,7 @@ static void create10(lv_obj_t *parent)
     lv_obj_set_style_text_color(pcm5102_page, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(pcm5102_page, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_t *back10_label = scr_back_btn_create(parent, ("ES8311"), scr10_btn_event_cb);
+    lv_obj_t *back10_label = scr_back_btn_create(parent, ("Music"), scr10_btn_event_cb);
 }
 static void entry10(void) 
 {
@@ -3725,6 +3729,210 @@ static scr_lifecycle_t screen12 = {
     .entry = entry12,
     .exit  = exit12,
     .destroy = destroy12,
+};
+#endif
+//************************************[ screen 13 ]****************************************** Microphone
+#if 1
+static lv_obj_t *mic_status_label = NULL;
+static lv_obj_t *mic_level_bar = NULL;
+static lv_obj_t *mic_signal_label = NULL;
+static lv_obj_t *mic_db_label = NULL;
+static lv_timer_t *mic_timer = NULL;
+
+static void scr13_btn_event_cb(lv_event_t *e)
+{
+    if(lv_event_get_code(e) == LV_EVENT_CLICKED) {
+        scr_mgr_pop(false);
+    }
+}
+
+static void mic_timer_cb(lv_timer_t *t)
+{
+    (void)t;
+
+    int level_percent = 0;
+    int level_db = -90;
+    if(!ui_audio_test_mic_read(&level_percent, &level_db)) {
+        lv_label_set_text(mic_status_label, "Audio unavailable");
+        lv_bar_set_value(mic_level_bar, 0, LV_ANIM_OFF);
+        lv_label_set_text(mic_signal_label, "Signal: --%");
+        lv_label_set_text(mic_db_label, "Level: -- dB");
+        return;
+    }
+
+    lv_label_set_text(mic_status_label, "Listening");
+    lv_bar_set_value(mic_level_bar, level_percent, LV_ANIM_OFF);
+    lv_label_set_text_fmt(mic_signal_label, "Signal: %d%%", level_percent);
+    lv_label_set_text_fmt(mic_db_label, "Level: %d dB", level_db);
+}
+
+static void create13(lv_obj_t *parent)
+{
+    mic_status_label = lv_label_create(parent);
+    lv_obj_set_width(mic_status_label, LV_HOR_RES - 20);
+    lv_obj_align(mic_status_label, LV_ALIGN_TOP_MID, 0, 52);
+    lv_obj_set_style_text_align(mic_status_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+    lv_obj_set_style_text_font(mic_status_label, FONT_BOLD_SIZE_16, LV_PART_MAIN);
+    lv_obj_set_style_text_color(mic_status_label, DECKPRO_COLOR_FG, LV_PART_MAIN);
+    lv_label_set_text(mic_status_label, "Preparing...");
+
+    mic_level_bar = lv_bar_create(parent);
+    lv_obj_set_size(mic_level_bar, LV_HOR_RES - 40, 24);
+    lv_obj_align(mic_level_bar, LV_ALIGN_TOP_MID, 0, 94);
+    lv_bar_set_range(mic_level_bar, 0, 100);
+    lv_bar_set_value(mic_level_bar, 0, LV_ANIM_OFF);
+    lv_obj_set_style_bg_color(mic_level_bar, lv_color_hex(0xD0D0D0), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(mic_level_bar, lv_color_hex(0x202020), LV_PART_INDICATOR);
+
+    mic_signal_label = lv_label_create(parent);
+    lv_obj_set_width(mic_signal_label, LV_HOR_RES - 20);
+    lv_obj_align(mic_signal_label, LV_ALIGN_TOP_MID, 0, 136);
+    lv_obj_set_style_text_align(mic_signal_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+    lv_obj_set_style_text_font(mic_signal_label, FONT_BOLD_SIZE_17, LV_PART_MAIN);
+    lv_obj_set_style_text_color(mic_signal_label, DECKPRO_COLOR_FG, LV_PART_MAIN);
+    lv_label_set_text(mic_signal_label, "Signal: --%");
+
+    mic_db_label = lv_label_create(parent);
+    lv_obj_set_width(mic_db_label, LV_HOR_RES - 20);
+    lv_obj_align(mic_db_label, LV_ALIGN_TOP_MID, 0, 172);
+    lv_obj_set_style_text_align(mic_db_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+    lv_obj_set_style_text_font(mic_db_label, FONT_BOLD_SIZE_15, LV_PART_MAIN);
+    lv_obj_set_style_text_color(mic_db_label, DECKPRO_COLOR_FG, LV_PART_MAIN);
+    lv_label_set_text(mic_db_label, "Level: -- dB");
+
+    scr_back_btn_create(parent, "Microphone", scr13_btn_event_cb);
+}
+
+static void entry13(void)
+{
+    ui_disp_full_refr();
+    if(!ui_audio_test_mic_start()) {
+        lv_label_set_text(mic_status_label, "Audio unavailable");
+        return;
+    }
+
+    mic_timer = lv_timer_create(mic_timer_cb, 40, NULL);
+    mic_timer_cb(mic_timer);
+}
+
+static void exit13(void)
+{
+    if(mic_timer != NULL) {
+        lv_timer_del(mic_timer);
+        mic_timer = NULL;
+    }
+    ui_audio_test_stop();
+    ui_disp_full_refr();
+}
+
+static void destroy13(void)
+{
+    mic_status_label = NULL;
+    mic_level_bar = NULL;
+    mic_signal_label = NULL;
+    mic_db_label = NULL;
+}
+
+static scr_lifecycle_t screen13 = {
+    .create = create13,
+    .entry = entry13,
+    .exit  = exit13,
+    .destroy = destroy13,
+};
+#endif
+//************************************[ screen 14 ]****************************************** Speaker
+#if 1
+static lv_obj_t *speaker_status_label = NULL;
+static lv_obj_t *speaker_frequency_label = NULL;
+static lv_timer_t *speaker_timer = NULL;
+
+static void scr14_btn_event_cb(lv_event_t *e)
+{
+    if(lv_event_get_code(e) == LV_EVENT_CLICKED) {
+        scr_mgr_pop(false);
+    }
+}
+
+static void speaker_timer_cb(lv_timer_t *t)
+{
+    (void)t;
+
+    if(!ui_audio_test_speaker_update()) {
+        lv_label_set_text(speaker_status_label, "Audio unavailable");
+        lv_label_set_text(speaker_frequency_label, "Frequency: -- Hz");
+        if(speaker_timer != NULL) {
+            lv_timer_pause(speaker_timer);
+        }
+        return;
+    }
+
+    lv_label_set_text(speaker_status_label, "Playing");
+    lv_label_set_text_fmt(speaker_frequency_label, "Frequency: %d Hz",
+                          ui_audio_test_speaker_frequency());
+}
+
+static void create14(lv_obj_t *parent)
+{
+    speaker_status_label = lv_label_create(parent);
+    lv_obj_set_width(speaker_status_label, LV_HOR_RES - 20);
+    lv_obj_align(speaker_status_label, LV_ALIGN_TOP_MID, 0, 62);
+    lv_obj_set_style_text_align(speaker_status_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+    lv_obj_set_style_text_font(speaker_status_label, FONT_BOLD_SIZE_16, LV_PART_MAIN);
+    lv_obj_set_style_text_color(speaker_status_label, DECKPRO_COLOR_FG, LV_PART_MAIN);
+    lv_label_set_text(speaker_status_label, "Preparing...");
+
+    speaker_frequency_label = lv_label_create(parent);
+    lv_obj_set_width(speaker_frequency_label, LV_HOR_RES - 20);
+    lv_obj_align(speaker_frequency_label, LV_ALIGN_TOP_MID, 0, 108);
+    lv_obj_set_style_text_align(speaker_frequency_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+    lv_obj_set_style_text_font(speaker_frequency_label, FONT_BOLD_SIZE_18, LV_PART_MAIN);
+    lv_obj_set_style_text_color(speaker_frequency_label, DECKPRO_COLOR_FG, LV_PART_MAIN);
+    lv_label_set_text(speaker_frequency_label, "Frequency: -- Hz");
+
+    lv_obj_t *tone_list = lv_label_create(parent);
+    lv_obj_set_width(tone_list, LV_HOR_RES - 20);
+    lv_obj_align(tone_list, LV_ALIGN_TOP_MID, 0, 155);
+    lv_obj_set_style_text_align(tone_list, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+    lv_obj_set_style_text_font(tone_list, FONT_BOLD_SIZE_14, LV_PART_MAIN);
+    lv_obj_set_style_text_color(tone_list, DECKPRO_COLOR_FG, LV_PART_MAIN);
+    lv_label_set_text(tone_list, "500 / 1000 / 2000 / 4000 Hz");
+
+    scr_back_btn_create(parent, "Speaker", scr14_btn_event_cb);
+}
+
+static void entry14(void)
+{
+    ui_disp_full_refr();
+    if(!ui_audio_test_speaker_start()) {
+        lv_label_set_text(speaker_status_label, "Audio unavailable");
+        return;
+    }
+
+    speaker_timer = lv_timer_create(speaker_timer_cb, 20, NULL);
+    speaker_timer_cb(speaker_timer);
+}
+
+static void exit14(void)
+{
+    if(speaker_timer != NULL) {
+        lv_timer_del(speaker_timer);
+        speaker_timer = NULL;
+    }
+    ui_audio_test_stop();
+    ui_disp_full_refr();
+}
+
+static void destroy14(void)
+{
+    speaker_status_label = NULL;
+    speaker_frequency_label = NULL;
+}
+
+static scr_lifecycle_t screen14 = {
+    .create = create14,
+    .entry = entry14,
+    .exit  = exit14,
+    .destroy = destroy14,
 };
 #endif
 //************************************[ UI ENTRY ]******************************************
@@ -4009,6 +4217,8 @@ void ui_deckpro_entry(void)
     scr_mgr_register(SCREEN10_ID,   &screen10);     // Music
     scr_mgr_register(SCREEN11_ID,   &screen11);     // Sleep
     scr_mgr_register(SCREEN12_ID,   &screen12);     // Motor
+    scr_mgr_register(SCREEN13_ID,   &screen13);     // Microphone
+    scr_mgr_register(SCREEN14_ID,   &screen14);     // Speaker
     
     scr_mgr_switch(SCREEN0_ID, false); // set root screen
     scr_mgr_set_anim(LV_SCR_LOAD_ANIM_OVER_LEFT, LV_SCR_LOAD_ANIM_OVER_LEFT, LV_SCR_LOAD_ANIM_OVER_LEFT);

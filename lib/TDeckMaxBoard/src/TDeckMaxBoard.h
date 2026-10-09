@@ -5,7 +5,7 @@
 
 // Board identity
 #define BOARD_NAME               "T-Deck-MAX v0.3"
-#define UI_T_DECK_PRO_VERSION    "v3.2-260919"  // Software version
+#define UI_T_DECK_PRO_VERSION    "v3.3-261009"  // Software version
 #define BOARD_T_DECK_PRO_VERSION "v3.3-250911"  // Hardware version
 
 // Common serial aliases used by multiple examples.

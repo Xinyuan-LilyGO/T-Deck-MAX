@@ -11,6 +11,10 @@
 #include "peripheral.h"
 #include "WiFi.h"
 #include <ctype.h>
+#include <math.h>
+#include <string.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <TouchDrvCSTXXX.hpp>
 
 
@@ -454,6 +458,204 @@ void ui_shutdown_on(void)
 
 //************************************[ screen 10 ]****************************************** PCM5102
 
+enum {
+    AUDIO_TEST_MODE_NONE = 0,
+    AUDIO_TEST_MODE_MIC,
+    AUDIO_TEST_MODE_SPEAKER,
+};
+
+static const uint32_t AUDIO_TEST_SAMPLE_RATE = 16000;
+static const size_t AUDIO_TEST_SAMPLE_COUNT = 256;
+static const float AUDIO_TEST_TWO_PI = 6.28318530718f;
+static const int AUDIO_TEST_SPEAKER_AMPLITUDE = 10000;
+static const uint32_t AUDIO_TEST_TONE_TIME_MS = 700;
+static const uint16_t audio_test_tones[] = {500, 1000, 2000, 4000};
+
+static volatile int audio_test_mode = AUDIO_TEST_MODE_NONE;
+static volatile bool audio_test_stream_open = false;
+static int16_t audio_test_buffer[AUDIO_TEST_SAMPLE_COUNT];
+static float audio_test_speaker_phase = 0.0f;
+static volatile uint8_t audio_test_speaker_tone = 0;
+static uint32_t audio_test_speaker_next_tone_ms = 0;
+static float audio_test_mic_level_filtered = 0.0f;
+static TaskHandle_t audio_test_speaker_task_handle = NULL;
+static volatile bool audio_test_speaker_stop_requested = false;
+static volatile bool audio_test_speaker_write_failed = false;
+
+static bool audio_test_open_stream(void)
+{
+    if (!peri_init_st[E_PERI_ES8311]) {
+        return false;
+    }
+
+    ui_audio_test_stop();
+    ui_xl9555_audio_sel(LOW);
+
+    if (codec.open(16, 1, AUDIO_TEST_SAMPLE_RATE) != 0) {
+        return false;
+    }
+
+    audio_test_stream_open = true;
+    return true;
+}
+
+static void audio_test_speaker_task_fn(void *param)
+{
+    (void)param;
+
+    while(!audio_test_speaker_stop_requested &&
+          audio_test_mode == AUDIO_TEST_MODE_SPEAKER &&
+          audio_test_stream_open) {
+        const float phase_step = AUDIO_TEST_TWO_PI * (float)audio_test_tones[audio_test_speaker_tone] /
+                                 (float)AUDIO_TEST_SAMPLE_RATE;
+        for(size_t i = 0; i < AUDIO_TEST_SAMPLE_COUNT; ++i) {
+            audio_test_buffer[i] = (int16_t)(AUDIO_TEST_SPEAKER_AMPLITUDE * sinf(audio_test_speaker_phase));
+            audio_test_speaker_phase += phase_step;
+            if(audio_test_speaker_phase >= AUDIO_TEST_TWO_PI) {
+                audio_test_speaker_phase -= AUDIO_TEST_TWO_PI;
+            }
+        }
+
+        if(codec.write((uint8_t *)audio_test_buffer, sizeof(audio_test_buffer)) != 0) {
+            if(!audio_test_speaker_stop_requested) {
+                audio_test_speaker_write_failed = true;
+            }
+            break;
+        }
+
+        if((int32_t)(millis() - audio_test_speaker_next_tone_ms) >= 0) {
+            audio_test_speaker_tone = (uint8_t)((audio_test_speaker_tone + 1) %
+                                                (sizeof(audio_test_tones) / sizeof(audio_test_tones[0])));
+            audio_test_speaker_next_tone_ms = millis() + AUDIO_TEST_TONE_TIME_MS;
+        }
+    }
+
+    audio_test_speaker_task_handle = NULL;
+    vTaskDelete(NULL);
+}
+
+void ui_audio_test_stop(void)
+{
+    audio_test_speaker_stop_requested = true;
+    while(audio_test_speaker_task_handle != NULL) {
+        delay(1);
+    }
+
+    if (audio_test_stream_open) {
+        if (audio_test_mode == AUDIO_TEST_MODE_SPEAKER) {
+            memset(audio_test_buffer, 0, sizeof(audio_test_buffer));
+            codec.write((uint8_t *)audio_test_buffer, sizeof(audio_test_buffer));
+        }
+        codec.close();
+        audio_test_stream_open = false;
+    }
+
+    audio_test_mode = AUDIO_TEST_MODE_NONE;
+    audio_test_speaker_phase = 0.0f;
+    audio_test_speaker_tone = 0;
+    audio_test_speaker_next_tone_ms = 0;
+    audio_test_mic_level_filtered = 0.0f;
+    audio_test_speaker_write_failed = false;
+    audio_test_speaker_stop_requested = false;
+    ui_xl9555_audio_sel(LOW);
+    ui_xl9555_amplifier(false);
+}
+
+bool ui_audio_test_mic_start(void)
+{
+    if (!audio_test_open_stream()) {
+        return false;
+    }
+
+    codec.setGain(24.0f);
+    ui_xl9555_amplifier(false);
+    audio_test_mode = AUDIO_TEST_MODE_MIC;
+    return true;
+}
+
+bool ui_audio_test_mic_read(int *level_percent, int *level_db)
+{
+    if (level_percent == NULL || level_db == NULL ||
+        audio_test_mode != AUDIO_TEST_MODE_MIC || !audio_test_stream_open) {
+        return false;
+    }
+
+    if (codec.read((uint8_t *)audio_test_buffer, sizeof(audio_test_buffer)) != 0) {
+        *level_percent = 0;
+        *level_db = -90;
+        return false;
+    }
+
+    int64_t sum = 0;
+    for (size_t i = 0; i < AUDIO_TEST_SAMPLE_COUNT; ++i) {
+        sum += audio_test_buffer[i];
+    }
+    const float mean = (float)sum / (float)AUDIO_TEST_SAMPLE_COUNT;
+
+    float square_sum = 0.0f;
+    for (size_t i = 0; i < AUDIO_TEST_SAMPLE_COUNT; ++i) {
+        const float sample = (float)audio_test_buffer[i] - mean;
+        square_sum += sample * sample;
+    }
+
+    const float rms = sqrtf(square_sum / (float)AUDIO_TEST_SAMPLE_COUNT);
+    float db = rms > 1.0f ? 20.0f * log10f(rms / 32768.0f) : -90.0f;
+    if (db < -90.0f) db = -90.0f;
+    if (db > 0.0f) db = 0.0f;
+
+    const float raw_percent = ((db + 60.0f) * 100.0f) / 60.0f;
+    audio_test_mic_level_filtered = audio_test_mic_level_filtered * 0.65f + raw_percent * 0.35f;
+    int percent = (int)(audio_test_mic_level_filtered + 0.5f);
+    if (percent < 0) percent = 0;
+    if (percent > 100) percent = 100;
+
+    *level_percent = percent;
+    *level_db = (int)(db - 0.5f);
+    return true;
+}
+
+bool ui_audio_test_speaker_start(void)
+{
+    if (!audio_test_open_stream()) {
+        return false;
+    }
+
+    codec.setMute(false);
+    audio_test_mode = AUDIO_TEST_MODE_SPEAKER;
+    audio_test_speaker_phase = 0.0f;
+    audio_test_speaker_tone = 0;
+    audio_test_speaker_next_tone_ms = millis() + AUDIO_TEST_TONE_TIME_MS;
+    audio_test_speaker_stop_requested = false;
+    audio_test_speaker_write_failed = false;
+    ui_xl9555_amplifier(true);
+
+    if (xTaskCreate(audio_test_speaker_task_fn, "audio_tone", 4096, NULL, 1,
+                    &audio_test_speaker_task_handle) != pdPASS) {
+        ui_audio_test_stop();
+        return false;
+    }
+
+    return true;
+}
+
+bool ui_audio_test_speaker_update(void)
+{
+    if (audio_test_mode != AUDIO_TEST_MODE_SPEAKER || !audio_test_stream_open) {
+        return false;
+    }
+
+    if (audio_test_speaker_write_failed) {
+        ui_audio_test_stop();
+        return false;
+    }
+    return true;
+}
+
+int ui_audio_test_speaker_frequency(void)
+{
+    return audio_test_tones[audio_test_speaker_tone];
+}
+
 #include "wav_hex.h"
 bool ui_pcm5102_cb(const char *at_cmd)
 {
@@ -463,6 +665,7 @@ bool ui_pcm5102_cb(const char *at_cmd)
 
 void ui_pcm5102_stop(void)
 {
+    ui_audio_test_stop();
 }
 
 // optional

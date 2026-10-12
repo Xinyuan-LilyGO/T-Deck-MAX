@@ -21,7 +21,7 @@
 volatile int default_language = DEFAULT_LANGUAGE_EN;
 volatile bool default_keypad_light = false;
 volatile bool default_display_light = false;
-volatile bool default_motor_status = false;
+volatile bool default_motor_status = true;
 volatile bool default_gps_status = true;
 volatile bool default_lora_status = true;
 volatile bool default_gyro_status = true;
@@ -116,10 +116,17 @@ void ui_setting_set_display_light(bool on)
     analogWrite(BOARD_EPD_BL, on*255);
     default_display_light = on;
 }
+
+static void set_power_pin(uint8_t pin, bool high)
+{
+    xl9555_io.pinMode(pin, OUTPUT);
+    xl9555_io.digitalWrite(pin, high ? HIGH : LOW);
+}
+
 void ui_setting_set_motor_status(bool on)
 {
-    // digitalWrite(BOARD_MOTOR_EN, on);
-    // default_motor_status = on;
+    set_power_pin(BOARD_XL9555_05_MOTOR_EN, on);
+    default_motor_status = on;
 }
 void ui_setting_set_gps_status(bool on)
 {
@@ -139,12 +146,13 @@ void ui_setting_set_gyro_status(bool on)
     // digitalWrite(BOARD_1V8_EN, on);
     // default_gyro_status = on;
 }
+
 void ui_setting_set_a7682_status(bool on)
 {
     // enable 7682 module power
-    // digitalWrite(BOARD_6609_EN, on);
-    // digitalWrite(BOARD_A7682E_PWRKEY, on);
-    // default_a7682_status = on;
+    set_power_pin(BOARD_XL9555_00_6609_EN, on);
+    set_power_pin(BOARD_XL9555_10_PWRKEY_EN, on);
+    default_a7682_status = on;
 }
 
 bool ui_setting_get_keypad_light(void)

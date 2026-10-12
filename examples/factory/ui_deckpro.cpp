@@ -2655,6 +2655,7 @@ static lv_obj_t *phone_dialer_call_btn = NULL;
 static lv_obj_t *phone_dialer_del_btn = NULL;
 static lv_obj_t *phone_dialer_at_btn = NULL;
 static lv_obj_t *phone_dialer_test_btn = NULL;
+static lv_obj_t *phone_dialer_stat_btn = NULL;
 static lv_obj_t *phone_dialer_recent[UI_PHONE_HISTORY_MAX] = {0};
 
 static lv_obj_t *phone_call_status = NULL;
@@ -3009,6 +3010,19 @@ static void phone_test_digits_event_cb(lv_event_t *e)
     }
 }
 
+static void phone_stat_event_cb(lv_event_t *e)
+{
+    if (e->code != LV_EVENT_CLICKED) {
+        return;
+    }
+
+    ui_phone_snapshot_t snapshot = {};
+    if (ui_phone_get_snapshot(&snapshot) && snapshot.state == UI_PHONE_STATE_IDLE) {
+        printf("modem: Requesting modem stat\n");
+	  (void)ui_phone_status();
+    }
+}
+
 static void phone_answer_event_cb(lv_event_t *e)
 {
     if (e->code == LV_EVENT_CLICKED) {
@@ -3170,6 +3184,10 @@ static void create8(lv_obj_t *parent)
     phone_dialer_test_btn = phone_action_button_create(parent, "Test", 87, -130, 46, false, phone_test_digits_event_cb);
     lv_obj_set_size(phone_dialer_test_btn, 46, 28);
     lv_obj_align(phone_dialer_test_btn, LV_ALIGN_TOP_RIGHT, -6, 3);
+
+    phone_dialer_stat_btn = phone_action_button_create(parent, "Stat", 87, -130, 46, false, phone_stat_event_cb);
+    lv_obj_set_size(phone_dialer_stat_btn, 46, 28);
+    lv_obj_align(phone_dialer_stat_btn, LV_ALIGN_TOP_RIGHT, -108, 3);
 
     lv_obj_t *recent_title = lv_label_create(parent);
     lv_obj_align(recent_title, LV_ALIGN_TOP_LEFT, 8, 256);

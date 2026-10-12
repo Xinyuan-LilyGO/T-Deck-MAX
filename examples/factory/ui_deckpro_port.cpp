@@ -432,6 +432,13 @@ bool ui_phone_play_test_digits(void)
     return phone_runtime_play_test_digits();
 }
 
+
+bool ui_phone_status(void)
+{
+    phone_runtime_status();
+    return true;
+}
+
 bool ui_phone_get_snapshot(ui_phone_snapshot_t *snapshot)
 {
     return phone_runtime_get_snapshot(snapshot);

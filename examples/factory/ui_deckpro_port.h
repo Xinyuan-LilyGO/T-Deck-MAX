@@ -171,6 +171,7 @@ bool ui_phone_dial(const char *number);
 bool ui_phone_answer(void);
 bool ui_phone_hang_up(void);
 bool ui_phone_play_test_digits(void);
+bool ui_phone_status(void);
 bool ui_phone_get_snapshot(ui_phone_snapshot_t *snapshot);
 void ui_phone_set_debug_passthrough(bool enabled);
 

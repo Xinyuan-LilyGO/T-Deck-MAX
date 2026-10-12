@@ -131,20 +131,20 @@ void ui_setting_set_motor_status(bool on)
 void ui_setting_set_gps_status(bool on)
 {
     // enable GPS module power
-    // digitalWrite(BOARD_GPS_EN, on);
-    // default_gps_status = on;
+    set_power_pin(BOARD_XL9555_02_GPS_EN, on);
+    default_gps_status = on;
 }
 void ui_setting_set_lora_status(bool on)
 {
     // enable LORA module power
-    // digitalWrite(BOARD_LORA_EN, on);
-    // default_lora_status = on;
+    set_power_pin(BOARD_XL9555_01_LORA_EN, on);
+    default_lora_status = on;
 }
 void ui_setting_set_gyro_status(bool on)
 {
     // enable gyroscope module power
-    // digitalWrite(BOARD_1V8_EN, on);
-    // default_gyro_status = on;
+    set_power_pin(BOARD_XL9555_03_1V8_EN, on);
+    default_gyro_status = on;
 }
 
 void ui_setting_set_a7682_status(bool on)

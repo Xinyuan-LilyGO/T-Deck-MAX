@@ -127,7 +127,7 @@ static int page_curr = 0;
 static struct menu_btn menu_btn_list[] = 
 {
     {SCREEN1_ID,  &img_lora,    "Lora",     23,     13},  // Page one
-    {SCREEN2_ID,  &img_setting, "Setting",  95,     13},
+    {SCREEN2_ID,  &img_setting, "Settings",  95,     13},
     {SCREEN3_ID,  &img_GPS,     "GPS",      167,    13},
     {SCREEN4_ID,  &img_wifi,    "Wifi",     23,     101},
     {SCREEN5_ID,  &img_test,    "Test",     95,     101},
@@ -878,13 +878,14 @@ static int setting_num = 0;
 static int setting_page_num = 0;
 static int setting_curr_page = 0;
 static ui_setting_handle setting_handle_list[] = {
+    {.name = "- About System",   .type=UI_SETTING_TYPE_SUB, .sub_id = SCREEN2_1_ID},
     {.name = "Keypad Backlight", .type=UI_SETTING_TYPE_SW,  .set_cb = ui_setting_set_keypad_light, .get_cb = ui_setting_get_keypad_light},
+    {.name = "Display Backlight", .type=UI_SETTING_TYPE_SW, .set_cb = ui_setting_set_display_light, .get_cb = ui_setting_get_display_light},
     {.name = "Motor Status",     .type=UI_SETTING_TYPE_SW,  .set_cb = ui_setting_set_motor_status, .get_cb = ui_setting_get_motor_status},
     {.name = "Power GPS",        .type=UI_SETTING_TYPE_SW,  .set_cb = ui_setting_set_gps_status,   .get_cb = ui_setting_get_gps_status},
     {.name = "Power Lora",       .type=UI_SETTING_TYPE_SW,  .set_cb = ui_setting_set_lora_status,  .get_cb = ui_setting_get_lora_status},
     {.name = "Power Gyro",       .type=UI_SETTING_TYPE_SW,  .set_cb = ui_setting_set_gyro_status,  .get_cb = ui_setting_get_gyro_status},
     {.name = "Power A7682",      .type=UI_SETTING_TYPE_SW,  .set_cb = ui_setting_set_a7682_status, .get_cb = ui_setting_get_a7682_status},
-    {.name = "- About System",   .type=UI_SETTING_TYPE_SUB, .sub_id = SCREEN2_1_ID},
 };
 
 static void setting_item_create(int curr_apge);
@@ -1111,7 +1112,7 @@ static lv_obj_t * scr3_create_label(lv_obj_t *parent)
     return label;
 }
 
-static void scr3_GPS_updata(void)
+static void scr3_GPS_update(void)
 {
     double lat      = 0; // Latitude
     double lon      = 0; // Longitude
@@ -1139,10 +1140,10 @@ static void scr3_GPS_updata(void)
 
     char buf[32];
 
-    lv_snprintf(buf, 16, "%0.1f", lat);
+    lv_snprintf(buf, 16, "%0.5f", lat);
     gps_set_line(label_list[0], "Latitude:", buf);
 
-    lv_snprintf(buf, 16, "%0.1f", lon);
+    lv_snprintf(buf, 16, "%0.5f", lon);
     gps_set_line(label_list[1], "Longitude:", buf);
 
     lv_snprintf(buf, 16, "%0.3fkmph", speed);
@@ -1166,7 +1167,7 @@ static void scr3_GPS_updata(void)
 
 static void GPS_loop_timer_event(lv_timer_t * t)
 {
-    scr3_GPS_updata();
+    scr3_GPS_update();
 }
 
 static void scr3_btn_event_cb(lv_event_t * e)
@@ -1210,7 +1211,7 @@ static void create3(lv_obj_t *parent)
 }
 static void entry3(void) 
 {
-    scr3_GPS_updata();
+    scr3_GPS_update();
 
     ui_gps_task_resume();
 
@@ -2315,7 +2316,7 @@ static lv_obj_t * scr6_1_create_label(lv_obj_t *parent)
     return label;
 }
 
-static void scr6_1_battert_updata(void)
+static void scr6_1_battert_update(void)
 {
     char buf[line_max];
 
@@ -2349,9 +2350,9 @@ static void scr6_1_battert_updata(void)
     battery_set_line(label_list[9], " ", buf);
 }
 
-static void batt_6_1_updata_timer_event(lv_timer_t *t) 
+static void batt_6_1_update_timer_event(lv_timer_t *t) 
 {
-    scr6_1_battert_updata();
+    scr6_1_battert_update();
 }
 
 static void scr6_1_btn_event_cb(lv_event_t * e)
@@ -2385,9 +2386,9 @@ static void create6_1(lv_obj_t *parent)
 }
 static void entry6_1(void) 
 {
-    scr6_1_battert_updata();
+    scr6_1_battert_update();
     ui_disp_full_refr();
-    batt_6_1_timer = lv_timer_create(batt_6_1_updata_timer_event, 5000, NULL);
+    batt_6_1_timer = lv_timer_create(batt_6_1_update_timer_event, 5000, NULL);
 }
 static void exit6_1(void) {
     if(batt_6_1_timer) {
@@ -2425,7 +2426,7 @@ static lv_obj_t * scr6_2_create_label(lv_obj_t *parent)
     return label;
 }
 
-static void scr6_2_battert_updata(void)
+static void scr6_2_battert_update(void)
 {
     char buf[line_max];
 
@@ -2463,9 +2464,9 @@ static void scr6_2_battert_updata(void)
     battery_set_line(label_list[9], "CapHealth:", buf);
 }
 
-static void batt_6_2_updata_timer_event(lv_timer_t *t) 
+static void batt_6_2_update_timer_event(lv_timer_t *t) 
 {
-    scr6_2_battert_updata();
+    scr6_2_battert_update();
 }
 
 static void scr6_2_btn_event_cb(lv_event_t * e)
@@ -2500,9 +2501,9 @@ static void create6_2(lv_obj_t *parent)
 
 static void entry6_2(void) 
 {
-    scr6_2_battert_updata();
+    scr6_2_battert_update();
     ui_disp_full_refr();
-    batt_6_2_timer = lv_timer_create(batt_6_2_updata_timer_event, 5000, NULL);
+    batt_6_2_timer = lv_timer_create(batt_6_2_update_timer_event, 5000, NULL);
 }
 static void exit6_2(void) {
     if(batt_6_2_timer) {
@@ -2653,6 +2654,7 @@ static lv_obj_t *phone_dialer_call_btn = NULL;
 static lv_obj_t *phone_dialer_del_btn = NULL;
 static lv_obj_t *phone_dialer_at_btn = NULL;
 static lv_obj_t *phone_dialer_test_btn = NULL;
+static lv_obj_t *phone_dialer_stat_btn = NULL;
 static lv_obj_t *phone_dialer_recent[UI_PHONE_HISTORY_MAX] = {0};
 
 static lv_obj_t *phone_call_status = NULL;
@@ -3007,6 +3009,19 @@ static void phone_test_digits_event_cb(lv_event_t *e)
     }
 }
 
+static void phone_stat_event_cb(lv_event_t *e)
+{
+    if (e->code != LV_EVENT_CLICKED) {
+        return;
+    }
+
+    ui_phone_snapshot_t snapshot = {};
+    if (ui_phone_get_snapshot(&snapshot) && snapshot.state == UI_PHONE_STATE_IDLE) {
+        printf("modem: Requesting modem stat\n");
+	  (void)ui_phone_status();
+    }
+}
+
 static void phone_answer_event_cb(lv_event_t *e)
 {
     if (e->code == LV_EVENT_CLICKED) {
@@ -3168,6 +3183,10 @@ static void create8(lv_obj_t *parent)
     phone_dialer_test_btn = phone_action_button_create(parent, "Test", 87, -130, 46, false, phone_test_digits_event_cb);
     lv_obj_set_size(phone_dialer_test_btn, 46, 28);
     lv_obj_align(phone_dialer_test_btn, LV_ALIGN_TOP_RIGHT, -6, 3);
+
+    phone_dialer_stat_btn = phone_action_button_create(parent, "Stat", 87, -130, 46, false, phone_stat_event_cb);
+    lv_obj_set_size(phone_dialer_stat_btn, 46, 28);
+    lv_obj_align(phone_dialer_stat_btn, LV_ALIGN_TOP_RIGHT, -108, 3);
 
     lv_obj_t *recent_title = lv_label_create(parent);
     lv_obj_align(recent_title, LV_ALIGN_TOP_LEFT, 8, 256);

@@ -24,7 +24,8 @@
 
 volatile int default_language = DEFAULT_LANGUAGE_EN;
 volatile bool default_keypad_light = false;
-volatile bool default_motor_status = false;
+volatile bool default_display_light = false;
+volatile bool default_motor_status = true;
 volatile bool default_gps_status = true;
 volatile bool default_lora_status = true;
 volatile bool default_gyro_status = true;
@@ -115,43 +116,60 @@ void ui_setting_set_language(int language)
 }
 void ui_setting_set_keypad_light(bool on)
 {
-    // digitalWrite(BOARD_KEYBOARD_LED, on);
-    // default_keypad_light = on;
+    analogWrite(BOARD_KEYBOARD_LED, on*255);
+    default_keypad_light = on;
 }
+void ui_setting_set_display_light(bool on)
+{
+    analogWrite(BOARD_EPD_BL, on*255);
+    default_display_light = on;
+}
+
+static void set_power_pin(uint8_t pin, bool high)
+{
+    xl9555_io.pinMode(pin, OUTPUT);
+    xl9555_io.digitalWrite(pin, high ? HIGH : LOW);
+}
+
 void ui_setting_set_motor_status(bool on)
 {
-    // digitalWrite(BOARD_MOTOR_PIN, on);
-    // default_motor_status = on;
+    set_power_pin(BOARD_XL9555_05_MOTOR_EN, on);
+    default_motor_status = on;
 }
 void ui_setting_set_gps_status(bool on)
 {
     // enable GPS module power
-    // digitalWrite(BOARD_GPS_EN, on);
-    // default_gps_status = on;
+    set_power_pin(BOARD_XL9555_02_GPS_EN, on);
+    default_gps_status = on;
 }
 void ui_setting_set_lora_status(bool on)
 {
     // enable LORA module power
-    // digitalWrite(BOARD_LORA_EN, on);
-    // default_lora_status = on;
+    set_power_pin(BOARD_XL9555_01_LORA_EN, on);
+    default_lora_status = on;
 }
 void ui_setting_set_gyro_status(bool on)
 {
     // enable gyroscope module power
-    // digitalWrite(BOARD_1V8_EN, on);
-    // default_gyro_status = on;
+    set_power_pin(BOARD_XL9555_03_1V8_EN, on);
+    default_gyro_status = on;
 }
+
 void ui_setting_set_a7682_status(bool on)
 {
     // enable 7682 module power
-    // digitalWrite(BOARD_6609_EN, on);
-    // digitalWrite(BOARD_A7682E_PWRKEY, on);
-    // default_a7682_status = on;
+    set_power_pin(BOARD_XL9555_00_6609_EN, on);
+    set_power_pin(BOARD_XL9555_10_PWRKEY_EN, on);
+    default_a7682_status = on;
 }
 
 bool ui_setting_get_keypad_light(void)
 {
     return default_keypad_light;
+}
+bool ui_setting_get_display_light(void)
+{
+    return default_display_light;
 }
 bool ui_setting_get_motor_status(void)
 {
@@ -428,6 +446,13 @@ bool ui_phone_hang_up(void)
 bool ui_phone_play_test_digits(void)
 {
     return phone_runtime_play_test_digits();
+}
+
+
+bool ui_phone_status(void)
+{
+    phone_runtime_status();
+    return true;
 }
 
 bool ui_phone_get_snapshot(ui_phone_snapshot_t *snapshot)
@@ -766,7 +791,7 @@ void ui_system_sleep(void)
 
         BOARD_TOUCH_INT,
 
-        BOARD_GYROSCOPDE_INT,
+        BOARD_GYROSCOPE_INT,
 
         BOARD_EPD_BL,
         BOARD_EPD_DC,

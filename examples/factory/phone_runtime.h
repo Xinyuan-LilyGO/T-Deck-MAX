@@ -42,6 +42,7 @@ bool phone_runtime_hang_up(void);
 bool phone_runtime_play_test_digits(void);
 void phone_runtime_set_debug_passthrough(bool enabled);
 bool phone_runtime_get_snapshot(ui_phone_snapshot_t *snapshot);
+void phone_runtime_status(void);
 
 #ifdef __cplusplus
 } /* extern "C" */

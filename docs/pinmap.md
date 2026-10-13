@@ -79,10 +79,10 @@ I2C address: `0x28`.
 
 | Function | Current Macro / Preferred Name | GPIO / Mapping | Source | Notes |
 | --- | --- | --- | --- | --- |
-| I2C SDA | `BOARD_GYROSCOPDE_SDA` | GPIO13 | Schematic Page 4 | Shared I2C bus |
-| I2C SCL | `BOARD_GYROSCOPDE_SCL` | GPIO14 | Schematic Page 4 | Shared I2C bus |
-| INT | `BOARD_GYROSCOPDE_INT` | GPIO21 | Schematic Page 4 | Schematic net name: `HIRQ` |
-| RST | `BOARD_GYROSCOPDE_RST` | `-1` | Schematic Page 4 | Reset is not wired |
+| I2C SDA | `BOARD_GYROSCOPE_SDA` | GPIO13 | Schematic Page 4 | Shared I2C bus |
+| I2C SCL | `BOARD_GYROSCOPE_SCL` | GPIO14 | Schematic Page 4 | Shared I2C bus |
+| INT | `BOARD_GYROSCOPE_INT` | GPIO21 | Schematic Page 4 | Schematic net name: `HIRQ` |
+| RST | `BOARD_GYROSCOPE_RST` | `-1` | Schematic Page 4 | Reset is not wired |
 | Power enable | `BOARD_XL9555_03_1V8_EN` | `XL9555 P03` | Schematic Page 4/7 | `HIGH` powers the IMU rail |
 
 ## 7. Motor DRV2605

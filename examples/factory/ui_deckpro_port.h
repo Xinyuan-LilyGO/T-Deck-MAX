@@ -89,6 +89,7 @@ void ui_lora_set_recv_flag(void);
 // [ screen 2 ] --- setting
 void ui_setting_set_language(int language);
 void ui_setting_set_keypad_light(bool on);
+void ui_setting_set_display_light(bool on);
 void ui_setting_set_motor_status(bool on);
 void ui_setting_set_gps_status(bool on);
 void ui_setting_set_lora_status(bool on);
@@ -96,6 +97,7 @@ void ui_setting_set_gyro_status(bool on);
 void ui_setting_set_a7682_status(bool on);
 
 bool ui_setting_get_keypad_light(void);
+bool ui_setting_get_display_light(void);
 bool ui_setting_get_motor_status(void);
 bool ui_setting_get_gps_status(void);  
 bool ui_setting_get_lora_status(void); 
@@ -169,6 +171,7 @@ bool ui_phone_dial(const char *number);
 bool ui_phone_answer(void);
 bool ui_phone_hang_up(void);
 bool ui_phone_play_test_digits(void);
+bool ui_phone_status(void);
 bool ui_phone_get_snapshot(ui_phone_snapshot_t *snapshot);
 void ui_phone_set_debug_passthrough(bool enabled);
 

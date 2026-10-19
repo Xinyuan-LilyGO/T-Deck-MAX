@@ -3429,7 +3429,7 @@ static void create9(lv_obj_t *parent)
         lv_obj_center(label);
 
         // back 
-        scr_back_btn_create(parent, "Shoutdown", scr8_btn_event_cb);
+        scr_back_btn_create(parent, "Shutdown", scr8_btn_event_cb);
     } 
     else 
     {

@@ -1146,7 +1146,7 @@ static void scr3_GPS_update(void)
     lv_snprintf(buf, 16, "%0.5f", lon);
     gps_set_line(label_list[1], "Longitude:", buf);
 
-    lv_snprintf(buf, 16, "%0.3fkm/h", speed);
+    lv_snprintf(buf, 16, "%0.1f km/h", speed);
     gps_set_line(label_list[2], "Speed:", buf);
 
     lv_snprintf(buf, 16, "%d", vsat);

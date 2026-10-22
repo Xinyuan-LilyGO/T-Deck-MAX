@@ -3466,7 +3466,7 @@ static int pcm5102_curr_page = 0;
 
 static ui_pcm5102_handle pcm5102_handle_list[] = 
 {
-    {"ES8311 play Wav", NULL, NULL, ui_pcm5102_cb, 0},
+    {"ES8311 play wav", NULL, NULL, ui_pcm5102_cb, 0},
     {"Microphone test", NULL, NULL, NULL, SCREEN13_ID},
     {"Speaker test", NULL, NULL, NULL, SCREEN14_ID},
 };

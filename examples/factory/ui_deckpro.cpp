@@ -134,7 +134,7 @@ static struct menu_btn menu_btn_list[] =
     {SCREEN6_ID,  &img_batt,    "Battery",  167,    101},
     {SCREEN7_ID,  &img_touch,   "Input",    23,     189},
     {SCREEN8_ID,  &img_A7682E,  "Phone",    95,     189},
-    {SCREEN9_ID,  &img_lora,    "Shutdown", 167,    189},
+    {SCREEN9_ID,  &img_sleep,   "Shutdown", 167,    189},
     {SCREEN10_ID, &img_music,   "Music",    23,     13},  // Page two
     {SCREEN11_ID, &img_sleep,   "Sleep",    95,     13},  // 
     {SCREEN12_ID, &img_motor,   "Motor",    167,    13},  // 

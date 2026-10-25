@@ -1910,7 +1910,7 @@ static void wifi_password_keypad_handler(void)
 
     char key = KEYPAD_KEY_NONE;
     int state = KEYPAD_RELEASE;
-    while (ui_input_get_keypay_event(&key, &state)) {
+    while (ui_input_get_keypad_event(&key, &state)) {
         if (wifi_password_process_event(key, state)) {
             return;
         }
@@ -2549,12 +2549,12 @@ static void input_timer_event(lv_timer_t *t)
         lv_label_set_text_fmt(input_touch,  "Touch: x: %03d | y: %03d", touch_x, touch_y);
     }
 
-    char keypay_v;
-    ret = ui_input_get_keypay_val(&keypay_v);
+    char keypad_v;
+    ret = ui_input_get_keypad_val(&keypad_v);
     if(ret > 0)
     {
-        ui_input_set_keypay_flag();
-        lv_label_set_text_fmt(input_keypad, "Keypad: %s", keypad_key_name(keypay_v));
+        ui_input_set_keypad_flag();
+        lv_label_set_text_fmt(input_keypad, "Keypad: %s", keypad_key_name(keypad_v));
     }
 
     static int sec = 0;
@@ -3050,10 +3050,10 @@ static void phone_handle_keyboard(void)
     }
 
     char key = '\0';
-    if (!ui_input_get_keypay_val(&key)) {
+    if (!ui_input_get_keypad_val(&key)) {
         return;
     }
-    ui_input_set_keypay_flag();
+    ui_input_set_keypad_flag();
 
     switch (phone_active_screen) {
     case SCREEN8_ID:
@@ -3971,19 +3971,19 @@ static void indev_get_gesture_dir(lv_timer_t *t)
 
 }
 
-static void menu_keypay_get_event(lv_timer_t *t)
+static void menu_keypad_get_event(lv_timer_t *t)
 {
     static int sec = 0;
     static int press = false;
-    char keypay_v;
-    int ret = ui_input_get_keypay_val(&keypay_v);
+    char keypad_v;
+    int ret = ui_input_get_keypad_val(&keypad_v);
 
     if(ret > 0)
     {
         sec = 0;
         press = true;
-        ui_input_set_keypay_flag();
-        lv_label_set_text_fmt(menu_keypad, "%s", keypad_key_name(keypay_v));
+        ui_input_set_keypad_flag();
+        lv_label_set_text_fmt(menu_keypad, "%s", keypad_key_name(keypad_v));
     }
 
     if(press){
@@ -4247,5 +4247,5 @@ void ui_deckpro_entry(void)
     // lv_label_set_text(menu_keypad, " ");
     // lv_obj_align(menu_keypad, LV_ALIGN_BOTTOM_RIGHT, -10, -10);
 
-    // menu_timer = lv_timer_create(menu_keypay_get_event, 40, NULL);
+    // menu_timer = lv_timer_create(menu_keypad_get_event, 40, NULL);
 }

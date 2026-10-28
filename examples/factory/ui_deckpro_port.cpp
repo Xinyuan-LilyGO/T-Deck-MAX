@@ -395,17 +395,17 @@ int ui_input_get_touch_coord(int *x, int *y)
     return ret;
 }
 
-int ui_input_get_keypay_val(char *v)
+int ui_input_get_keypad_val(char *v)
 {
     return keypad_get_val(v);
 }
 
-int ui_input_get_keypay_event(char *v, int *state)
+int ui_input_get_keypad_event(char *v, int *state)
 {
     return keypad_get_event(v, state);
 }
 
-void ui_input_set_keypay_flag(void)
+void ui_input_set_keypad_flag(void)
 {
     keypad_set_flag();
 }

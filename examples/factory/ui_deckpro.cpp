@@ -134,7 +134,7 @@ static struct menu_btn menu_btn_list[] =
     {SCREEN6_ID,  &img_batt,    "Battery",  167,    101},
     {SCREEN7_ID,  &img_touch,   "Input",    23,     189},
     {SCREEN8_ID,  &img_A7682E,  "Phone",    95,     189},
-    {SCREEN9_ID,  &img_lora,    "Shutdown", 167,    189},
+    {SCREEN9_ID,  &img_sleep,   "Shutdown", 167,    189},
     {SCREEN10_ID, &img_music,   "Music",    23,     13},  // Page two
     {SCREEN11_ID, &img_sleep,   "Sleep",    95,     13},  // 
     {SCREEN12_ID, &img_motor,   "Motor",    167,    13},  // 
@@ -385,7 +385,7 @@ static void scr1_list_event(lv_event_t *e)
             {
                 scr_mgr_push(SCREEN1_1_ID, false);
             }
-            if(strcmp("- Lora Setting", str) == 0)
+            if(strcmp("- Lora Settings", str) == 0)
             {
                 scr_mgr_push(SCREEN1_2_ID, false);
             }
@@ -440,7 +440,7 @@ static void create1(lv_obj_t *parent)
     lv_obj_set_style_shadow_width(scr1_list, 0, LV_PART_MAIN);
 
     scr1_item_create("- Auto Test", scr1_list_event);
-    scr1_item_create("- Lora Setting", scr1_list_event);
+    scr1_item_create("- Lora Settings", scr1_list_event);
 
     // back
     scr_back_btn_create(parent, "Lora", scr1_btn_event_cb);
@@ -787,7 +787,7 @@ static void create1_2(lv_obj_t *parent)
     lv_obj_add_event_cb(dropdown_band, lora_setting_event_handler, LV_EVENT_VALUE_CHANGED, (void *)&band_flag);
     lv_obj_add_event_cb(dropdown_power,   lora_setting_event_handler, LV_EVENT_VALUE_CHANGED, (void *)&power_flag);
     // back
-    scr_back_btn_create(parent, ("Lora Setting"), scr1_2_btn_event_cb);
+    scr_back_btn_create(parent, ("Lora Settings"), scr1_2_btn_event_cb);
 }
 static void entry1_2(void) 
 {
@@ -1070,7 +1070,7 @@ static void create2(lv_obj_t *parent)
     lv_obj_set_style_text_color(setting_page, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(setting_page, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    scr_back_btn_create(parent, ("Setting"), scr2_btn_event_cb);
+    scr_back_btn_create(parent, ("Settings"), scr2_btn_event_cb);
 }
 static void entry2(void) {
     ui_disp_full_refr();
@@ -1146,7 +1146,7 @@ static void scr3_GPS_update(void)
     lv_snprintf(buf, 16, "%0.5f", lon);
     gps_set_line(label_list[1], "Longitude:", buf);
 
-    lv_snprintf(buf, 16, "%0.3fkmph", speed);
+    lv_snprintf(buf, 16, "%0.1f km/h", speed);
     gps_set_line(label_list[2], "Speed:", buf);
 
     lv_snprintf(buf, 16, "%d", vsat);
@@ -2320,7 +2320,7 @@ static void scr6_1_battert_update(void)
 {
     char buf[line_max];
 
-    battery_set_line(label_list[0], "Charging:", (ui_batt_25896_is_chg() == true ? "Charging" : "Not charged"));
+    battery_set_line(label_list[0], "Charging:", (ui_batt_25896_is_chg() == true ? "Charging" : "Not charging"));
 
     lv_snprintf(buf, line_max, "%.2fV", ui_batt_25896_get_vbus());
     battery_set_line(label_list[1], "VBUS:", buf);
@@ -3429,7 +3429,7 @@ static void create9(lv_obj_t *parent)
         lv_obj_center(label);
 
         // back 
-        scr_back_btn_create(parent, "Shoutdown", scr8_btn_event_cb);
+        scr_back_btn_create(parent, "Shutdown", scr8_btn_event_cb);
     } 
     else 
     {
@@ -3466,7 +3466,7 @@ static int pcm5102_curr_page = 0;
 
 static ui_pcm5102_handle pcm5102_handle_list[] = 
 {
-    {"ES8311 play Wav", NULL, NULL, ui_pcm5102_cb, 0},
+    {"ES8311 play wav", NULL, NULL, ui_pcm5102_cb, 0},
     {"Microphone test", NULL, NULL, NULL, SCREEN13_ID},
     {"Speaker test", NULL, NULL, NULL, SCREEN14_ID},
 };

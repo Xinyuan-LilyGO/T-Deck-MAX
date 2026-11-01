@@ -2331,7 +2331,7 @@ static void scr6_1_battert_update(void)
     lv_snprintf(buf, line_max, "%.2fV", ui_batt_25896_get_vbat());
     battery_set_line(label_list[3], "VBAT:", buf);
 
-    lv_snprintf(buf, line_max, "%.2fv", ui_batt_25896_get_volt_targ());
+    lv_snprintf(buf, line_max, "%.2fV", ui_batt_25896_get_volt_targ());
     battery_set_line(label_list[4], "VOLT Target:", buf);
 
     lv_snprintf(buf, line_max, "%.2fmA", ui_batt_25896_get_chg_curr());
@@ -2430,7 +2430,7 @@ static void scr6_2_battert_update(void)
 {
     char buf[line_max];
 
-    battery_set_line(label_list[0],"VBUS ST::", (ui_battery_27220_get_input() == true ? "Connected" : "Disonnected"));
+    battery_set_line(label_list[0],"VBUS ST:", (ui_battery_27220_get_input() == true ? "Connected" : "Disonnected"));
 
     if(ui_battery_27220_get_input() == true ){
         lv_snprintf(buf, line_max, "%s", (ui_battery_27220_get_charge_finish()? "Finsish":"Charging"));

@@ -2433,11 +2433,11 @@ static void scr6_2_battert_update(void)
     battery_set_line(label_list[0],"VBUS ST:", (ui_battery_27220_get_input() == true ? "Connected" : "Disonnected"));
 
     if(ui_battery_27220_get_input() == true ){
-        lv_snprintf(buf, line_max, "%s", (ui_battery_27220_get_charge_finish()? "Finsish":"Charging"));
+        lv_snprintf(buf, line_max, "%s", (ui_battery_27220_get_charge_finish()? "Finished":"Charging"));
     } else {
         lv_snprintf(buf, line_max, "%s", "Discharge");
     }
-    battery_set_line(label_list[1],"Charing ST:", buf);
+    battery_set_line(label_list[1],"Charging ST:", buf);
 
     lv_snprintf(buf, line_max, "0x%x", ui_battery_27220_get_status());
     battery_set_line(label_list[2],"Battery ST:", buf);
@@ -2461,7 +2461,7 @@ static void scr6_2_battert_update(void)
     battery_set_line(label_list[8], "Cap Percent:", buf);
 
     lv_snprintf(buf, line_max, "%d%%", ui_battery_27220_get_health());
-    battery_set_line(label_list[9], "CapHealth:", buf);
+    battery_set_line(label_list[9], "Cap Health:", buf);
 }
 
 static void batt_6_2_update_timer_event(lv_timer_t *t) 

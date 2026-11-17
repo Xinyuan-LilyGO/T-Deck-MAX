@@ -68,6 +68,7 @@ enum {
     SCREEN8_1_ID,
     SCREEN8_2_ID,
     SCREEN8_3_ID,
+    SCREEN666_ID,
     SCREEN9_ID,
     SCREEN10_ID,
     SCREEN11_ID,

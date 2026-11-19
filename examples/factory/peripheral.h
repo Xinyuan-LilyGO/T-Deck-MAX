@@ -24,6 +24,9 @@ enum {
     E_PERI_NUM_MAX,
 };
 
+// Cached at startup; reading the model never accesses the modem UART.
+const char *modem_get_model_name(void);
+
 // lora sx1262
 // #define LORA_FREQ      850.0
 #define LORA_MODE_SEND 0

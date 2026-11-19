@@ -889,7 +889,7 @@ static ui_setting_handle setting_handle_list[] = {
     {.name = "Power GPS",        .type=UI_SETTING_TYPE_SW,  .set_cb = ui_setting_set_gps_status,   .get_cb = ui_setting_get_gps_status},
     {.name = "Power Lora",       .type=UI_SETTING_TYPE_SW,  .set_cb = ui_setting_set_lora_status,  .get_cb = ui_setting_get_lora_status},
     {.name = "Power Gyro",       .type=UI_SETTING_TYPE_SW,  .set_cb = ui_setting_set_gyro_status,  .get_cb = ui_setting_get_gyro_status},
-    {.name = "Power A7682",      .type=UI_SETTING_TYPE_SW,  .set_cb = ui_setting_set_a7682_status, .get_cb = ui_setting_get_a7682_status},
+    {.name = "Power Modem",      .type=UI_SETTING_TYPE_SW,  .set_cb = ui_setting_set_a7682_status, .get_cb = ui_setting_get_a7682_status},
 };
 
 static void setting_item_create(int curr_apge);
@@ -2028,7 +2028,7 @@ static ui_test_handle test_handle_list[] = {
     { .name="SY6970",    .peri_id=E_PERI_BQ25896    , .cb=ui_test_get },
     { .name="BQ27220",    .peri_id=E_PERI_BQ27220    , .cb=ui_test_get },
     { .name="SD Card",    .peri_id=E_PERI_SD         , .cb=ui_test_get },
-    { .name="A7682E",     .peri_id=E_PERI_A7682E     , .cb=ui_test_get },
+    { .name="4G Modem",   .peri_id=E_PERI_A7682E     , .cb=ui_test_get },
     { .name="ES8311",     .peri_id=E_PERI_ES8311     , .cb=ui_test_get },
     { .name="Keypad",     .peri_id=E_PERI_KYEPAD     , .cb=ui_test_get },
     { .name="GPS",        .peri_id=E_PERI_GPS        , .cb=ui_test_get },
@@ -2084,7 +2084,8 @@ static void test_item_create(int curr_apge)
 
     for(int i = start; i < end; i++) {
         ui_test_handle *h = &test_handle_list[i];
-        h->obj = lv_list_add_btn(test_list, NULL, h->name);
+        const char *name = h->peri_id == E_PERI_A7682E ? modem_get_model_name() : h->name;
+        h->obj = lv_list_add_btn(test_list, NULL, name);
         h->st = lv_label_create(h->obj);
         lv_obj_set_style_text_font(h->st, FONT_BOLD_SIZE_15, LV_PART_MAIN);
         lv_obj_align(h->st, LV_ALIGN_RIGHT_MID, 0, 0);
@@ -2886,7 +2887,7 @@ static void phone_refresh_dialer(const ui_phone_snapshot_t *snapshot)
     bool idle_actions_enabled = snapshot->state == UI_PHONE_STATE_IDLE &&
                                 strcmp(status, "Testing 0-9") != 0;
     if (snapshot->state == UI_PHONE_STATE_UNAVAILABLE) {
-        status = "A7682E Failed";
+        status = "Modem Failed";
     }
 
     phone_set_label_text(phone_dialer_status, status);

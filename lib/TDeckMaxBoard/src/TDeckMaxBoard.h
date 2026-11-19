@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 // Board identity
-#define BOARD_NAME               "T-Deck-MAX v0.3"
-#define UI_T_DECK_PRO_VERSION    "v3.3-261009"  // Software version
+#define BOARD_NAME               "T-Deck-MAX"
+#define UI_T_DECK_PRO_VERSION    "v3.4-261117"  // Software version
 #define BOARD_T_DECK_PRO_VERSION "v3.3-250911"  // Hardware version
 
 // Common serial aliases used by multiple examples.

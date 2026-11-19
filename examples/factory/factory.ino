@@ -30,6 +30,7 @@
 
 TinyGsm modem(SerialAT);
 TaskHandle_t a7682_handle = nullptr;
+static const char *modem_model_name = "4G Modem";
 
 XPowersPPM PPM;
 BQ27220 bq27220;
@@ -364,7 +365,7 @@ static void phone_snapshot_reset(bool available)
     portENTER_CRITICAL(&phone_snapshot_mux);
     memset(&phone_snapshot, 0, sizeof(phone_snapshot));
     phone_snapshot.state = available ? UI_PHONE_STATE_IDLE : UI_PHONE_STATE_UNAVAILABLE;
-    phone_copy_text(phone_snapshot.status, sizeof(phone_snapshot.status), available ? "Idle" : "A7682E Failed");
+    phone_copy_text(phone_snapshot.status, sizeof(phone_snapshot.status), available ? "Idle" : "Modem Failed");
     phone_snapshot.debug_passthrough = false;
     portEXIT_CRITICAL(&phone_snapshot_mux);
 
@@ -690,7 +691,7 @@ bool phone_runtime_get_snapshot(ui_phone_snapshot_t *snapshot)
 
     if (snapshot->status[0] == '\0') {
         phone_copy_text(snapshot->status, sizeof(snapshot->status),
-                        snapshot->state == UI_PHONE_STATE_UNAVAILABLE ? "A7682E Failed" : "Idle");
+                        snapshot->state == UI_PHONE_STATE_UNAVAILABLE ? "Modem Failed" : "Idle");
     }
     return true;
 }
@@ -1042,8 +1043,31 @@ static void A7682E_cleanup(void)
     phone_snapshot_reset(false);
 }
 
+const char *modem_get_model_name(void)
+{
+    return modem_model_name;
+}
+
+static void modem_detect_model(void)
+{
+    // Query before the runtime task starts so there is only one UART reader.
+    String model = modem.getModemName(); // AT+CGMM
+    model.toUpperCase();
+    if (model.indexOf("A7682E") < 0 && model.indexOf("A7670G") < 0) {
+        model = modem.getModemInfo(); // ATI fallback for other firmware versions
+        model.toUpperCase();
+    }
+    if (model.indexOf("A7682E") >= 0) {
+        modem_model_name = "A7682E";
+    } else if (model.indexOf("A7670G") >= 0) {
+        modem_model_name = "A7670G";
+    }
+    Serial.printf("[Modem] Model: %s\n", modem_model_name);
+}
+
 static bool A7682E_init(void)
 {
+    modem_model_name = "4G Modem";
     Serial.println("Place your board outside to catch satelite signal");
     phone_snapshot_reset(false);
 
@@ -1059,6 +1083,8 @@ static bool A7682E_init(void)
         A7682E_cleanup();
         return false;
     }
+
+    modem_detect_model();
 
     modem.sendAT("+CLIP=1");
     modem.waitResponse(1000);
